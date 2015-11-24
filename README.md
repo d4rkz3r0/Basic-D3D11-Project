@@ -1,2 +1,2 @@
 # GX2Project
-Graphics II DirectX Demo
+Graphics II DirectX Project
