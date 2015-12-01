@@ -259,6 +259,17 @@ void D3DApp::Update(float deltaTime)
 	{
 		mCamera.VFly(-deltaTime);
 	}
+
+	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
+	{
+		mCamera.RotateY(deltaTime);
+	}
+
+	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
+	{
+		mCamera.RotateY(-deltaTime);
+	}
+
 	mCamera.UpdateViewMatrix();
 	XMMATRIX viewProj = mCamera.GetViewProj();
 	
