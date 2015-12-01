@@ -1,13 +1,14 @@
 #include "Camera.h"
 
-//Builds Default Camera at the Origin
+//Builds Camera at the Origin
 Camera::Camera() :
 	mPos(0.0f, 0.0f, 0.0f),
 	mRight(1.0f, 0.0f, 0.0f), 
 	mUp(0.0f, 1.0f, 0.0f),
-	mLook(0.0f, 0.0f, 1.0f)
+	mLook(0.0f, 0.0f, 1.0f),
+	mAspect(1.77f)
 {
-	//BuildFrustum(XM_PIDIV2, 1.0f, 0.05f, 1000.f);
+	SetFrustum(XM_PIDIV2, mAspect, 0.5f, 1000.f);
 }
 
 Camera::~Camera(){}
@@ -57,17 +58,15 @@ XMMATRIX Camera::GetView() const
 	return XMLoadFloat4x4(&mView);
 }
 
-//XMMATRIX Camera::GetProj() const
-//{
-//	return XMLoadFloat4x4(&mProj);
-//}
+XMMATRIX Camera::GetProj() const
+{
+	return XMLoadFloat4x4(&mProj);
+}
 
-////Returns the "VP" part of the WVP Matrix
-////Call this after UpdateViewMatrix();
-//XMMATRIX Camera::GetViewProj() const
-//{
-//	return (XMMatrixMultiply(GetView(), GetProj()));
-//}
+XMMATRIX Camera::GetViewProj() const
+{
+	return (XMMatrixMultiply(GetView(), GetProj()));
+}
 
 void Camera::SetRight(float x, float y, float z)
 {
@@ -94,96 +93,80 @@ void Camera::SetPosition(XMFLOAT3& position)
 	mPos = position;
 }
 
-////Builds the "P" part of the WVP Matrix
-//void Camera::BuildFrustum(float foVY, float aspectRatio, float nearZ, float farZ)
-//{
-//	//Save Properties
-//	mFoVY = foVY;
-//	mAspect = aspectRatio;
-//	mNearZ = nearZ;
-//	mFarZ = farZ;
-//	
-//	//Save Result in friendly format
-//	XMStoreFloat4x4(&mProj, XMMatrixPerspectiveFovLH(mFoVY, mAspect, mNearZ, mFarZ));
-//}
-
-
-//Prep to Build View Matrix
-void Camera::PrepLookAt(XMFLOAT3& position, XMFLOAT3& target, XMFLOAT3& up)
+void Camera::SetFrustum(float foVY, float aspectRatio, float nearZ, float farZ)
 {
-	//Load necessary floats into XMVECTORS for XM Calcs
+	mFoVY = foVY;
+	mAspect = aspectRatio;
+	mNearZ = nearZ;
+	mFarZ = farZ;
+	
+	XMStoreFloat4x4(&mProj, XMMatrixPerspectiveFovLH(mFoVY, mAspect, mNearZ, mFarZ));
+}
+
+void Camera::PrepView(XMFLOAT3& position, XMFLOAT3& target, XMFLOAT3& up)
+{
 	XMVECTOR vPosition = XMLoadFloat3(&position);
 	XMVECTOR vTarget = XMLoadFloat3(&target);
 	XMVECTOR vUp = XMLoadFloat3(&up);
 
-	//Use Position, Target, and Up to calculate
-	//the Look, Right, newUP
-	BuildLookAt(vPosition, vTarget, vUp);
+	//Use Position, Target, and Up to calculate Look, Right, Up
+	SetView(vPosition, vTarget, vUp);
 }
 
-//Prep to Build View Matrix - Calculate proper perpendicular vectors 
-void Camera::BuildLookAt(XMVECTOR _vPosition, XMVECTOR _vTarget, XMVECTOR _vUp)
+void Camera::SetView(XMVECTOR _vPosition, XMVECTOR _vTarget, XMVECTOR _vUp)
 {
-	//+Z
-	//Calculate Vector that would be the camera's forward axis if you were facing a target.
-	//Remove it's magnitude (length) since we only care about the direction of travel.
 	XMVECTOR vLook = XMVector3Normalize(XMVectorSubtract(_vTarget, _vPosition));
-
-	//+X
-	//Calculate Vector that would be the camera's RIGHT if it were perpendicular between arg1 and arg2.
 	XMVECTOR vRight = XMVector3Normalize(XMVector3Cross(_vUp, vLook));
-
-	//+Y
-	//Calculate Vector that would be the camera's relative UP if it were perpendicular between arg1 and arg2.
 	XMVECTOR vUp = XMVector3Normalize(XMVector3Cross(vLook, vRight));
 
-	//Save results to floats
-	XMStoreFloat3(&mRight, vRight);  //1st row of View Matrix - X Vec
-	XMStoreFloat3(&mUp, vUp);        //2nd row of View Matrix - Y Vec
-	XMStoreFloat3(&mLook, vLook);    //3rd row of View Matrix - Z Vec
-	XMStoreFloat3(&mPos, _vPosition); //4th row of View Matrix - Pos Vec
+	XMStoreFloat3(&mRight, vRight);
+	XMStoreFloat3(&mUp, vUp);
+	XMStoreFloat3(&mLook, vLook);
+	XMStoreFloat3(&mPos, _vPosition);
 }
 
-//Local Left and Right Translation Offset
 void Camera::Strafe(float moveSpeed)
 {
-	//I wish
-	//mPos.z += moveAmount;
-
-	//speed into a vector
 	XMVECTOR vMoveDirection = XMVectorReplicate(moveSpeed);
-	//Pull just the floats we need (Left/Right Movement means just cam's XVec) into Vectors For XM Calculations
+	vMoveDirection = XMVectorScale(vMoveDirection, mSpeedScalar);
 	XMVECTOR vPosition = XMLoadFloat3(&mPos);
 	XMVECTOR vRight = XMLoadFloat3(&mRight);
 
-	//Beautiful Function
-	//newCameraPosition = (directionToMove * vectorYouNeedToMove) + camera's current Position Vector
 	XMStoreFloat3(&mPos, XMVectorMultiplyAdd(vMoveDirection, vRight, vPosition));
 }
 
-void Camera::Walk(float moveSpeed)
+void Camera::Step(float moveSpeed)
 {
 	XMVECTOR vMoveDirection = XMVectorReplicate(moveSpeed);
+	vMoveDirection = XMVectorScale(vMoveDirection, mSpeedScalar);
 	XMVECTOR vPosition = XMLoadFloat3(&mPos);
 	XMVECTOR vLook = XMLoadFloat3(&mLook);
 
 	XMStoreFloat3(&mPos, XMVectorMultiplyAdd(vMoveDirection, vLook, vPosition));
 }
 
-//X Axis Rotation
+void Camera::VFly(float moveSpeed)
+{
+	
+	XMVECTOR vMoveDirection = XMVectorReplicate(moveSpeed);
+	vMoveDirection = XMVectorScale(vMoveDirection, mSpeedScalar);
+	XMVECTOR vGlobalY = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+	XMVECTOR vPosition = XMLoadFloat3(&mPos);
+
+	XMStoreFloat3(&mPos, XMVectorMultiplyAdd(vMoveDirection, vGlobalY, vPosition));
+}
+
 void Camera::Pitch(float angle)
 {
-	//Build a MX around the camera's X to merge into View MX
-	XMMATRIX mxRotation = XMMatrixRotationNormal(XMLoadFloat3(&mRight), angle);
-
-	//Extract floats into Vectors we need
-	//Will be affecting the View MX's up and look, y vec and z vec, respectively.
+	XMMATRIX camRightRotationMX = XMMatrixRotationAxis(XMLoadFloat3(&mRight), angle);
+	
+	//Grab camera Y and Z axes
 	XMVECTOR vUp = XMLoadFloat3(&mUp);
 	XMVECTOR vLook = XMLoadFloat3(&mLook);
 
-	//newViewMXRow = currMXRow * transformationMX, not using transformationMX's 4th, positional row.
-	XMVECTOR vUpdatedUp = XMVector3TransformNormal(vUp, mxRotation); //2nd Row
-	XMVECTOR vUpdatedLook = XMVector3TransformNormal(vLook, mxRotation); //3rd Row
+	//Don't use RightRotationMX's position vector when multiplying
+	XMVECTOR vUpdatedUp = XMVector3TransformNormal(vUp, camRightRotationMX);
+	XMVECTOR vUpdatedLook = XMVector3TransformNormal(vLook, camRightRotationMX);
 
 	XMStoreFloat3(&mUp, vUpdatedUp);
 	XMStoreFloat3(&mLook, vUpdatedLook);
@@ -191,98 +174,87 @@ void Camera::Pitch(float angle)
 
 void Camera::RotateY(float angle)
 {
-	//Global Y MX
-	XMMATRIX mxRotation = XMMatrixRotationY(angle);
-	XMVECTOR vSavedPos = XMLoadFloat3(&mPos);
-	XMMATRIX mxOrigin = XMMatrixTranslationFromVector(XMVectorZero());
-	XMMATRIX mxCurrView = XMLoadFloat4x4(&mView);
-	mxCurrView = XMMatrixMultiply(mxOrigin, mxOrigin);
-	mxCurrView = XMMatrixTranslationFromVector(vSavedPos);
+	XMMATRIX globalYRotationMX = XMMatrixRotationY(angle);
 
-	XMStoreFloat4x4(&mView, mxCurrView);
-
-
-	////Going to Be affecting All rows since this is a Global Rotation!
-	//XMVECTOR vRight = XMLoadFloat3(&mRight);
-	//XMVECTOR vLook = XMLoadFloat3(&mLook);
-	//XMVECTOR vUp = XMLoadFloat3(&mUp);
-
-	////newViewMXRow = currMXRow * transformationMX, not using transformationMX's 4th, positional row.
-	//XMVECTOR vNewRight = XMVector3TransformNormal(vRight, mxRotation);
-	//XMVECTOR vNewUp = XMVector3TransformNormal(vUp, mxRotation);
-	//XMVECTOR vNewLook = XMVector3TransformNormal(vLook, mxRotation);
-
-	////Save out
-	//XMStoreFloat3(&mRight, vNewRight);
-	//XMStoreFloat3(&mLook, vNewLook);
-	//XMStoreFloat3(&mUp, vNewUp);
-
-}
-
-void Camera::VFly(float moveSpeed)
-{
-	XMVECTOR vGlobalY = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
-	XMVECTOR vMoveDirection = XMVectorReplicate(moveSpeed);
-	XMVECTOR vPosition = XMLoadFloat3(&mPos);
-
-	//MoveDirection * GlobalY + currPos = newPos
-	XMStoreFloat3(&mPos, XMVectorMultiplyAdd(vMoveDirection, vGlobalY, vPosition));
-}
-
-//Maintain Orthronormal Property of View Matrix after
-//all of the transformations
-void Camera::UpdateViewMatrix()
-{
-	//Extract all relevant floats into Vectors
+	//Grab all camera axes
+	XMVECTOR vRight = XMLoadFloat3(&mRight);
 	XMVECTOR vLook = XMLoadFloat3(&mLook);
 	XMVECTOR vUp = XMLoadFloat3(&mUp);
+
+	//Don't use YRotationMX's position vector when multiplying
+	XMVECTOR vUpdatedRight = XMVector3TransformNormal(vRight, globalYRotationMX);
+	XMVECTOR vUpdatedUp = XMVector3TransformNormal(vUp, globalYRotationMX);
+	XMVECTOR vUpdatedLook = XMVector3TransformNormal(vLook, globalYRotationMX);
+
+	XMStoreFloat3(&mRight, vUpdatedRight);
+	XMStoreFloat3(&mLook, vUpdatedLook);
+	XMStoreFloat3(&mUp, vUpdatedUp);
+}
+
+void Camera::Look(float xAngle, float yAngle, float zAngle)
+{
+	//Pitch(X), Yaw(Y), Roll Order(Z) (Ignore Function Name)
+	XMMATRIX globalRotationMX = XMMatrixRotationRollPitchYaw(xAngle, yAngle, zAngle);
+
+
+	//Loaded
 	XMVECTOR vRight = XMLoadFloat3(&mRight);
+	XMVECTOR vUp = XMLoadFloat3(&mUp);
+	XMVECTOR vLook = XMLoadFloat3(&mLook);
+
+	
+	
+	
+
+	//Saved
+	XMStoreFloat3(&mRight, XMVector3TransformNormal(vRight, globalRotationMX));
+	XMStoreFloat3(&mUp, XMVector3TransformNormal(vUp, globalRotationMX));
+	XMStoreFloat3(&mLook, XMVector3TransformNormal(vLook, globalRotationMX));
+}
+
+void Camera::UpdateViewMatrix()
+{
+	//Load
+	XMVECTOR vRight = XMLoadFloat3(&mRight);
+	XMVECTOR vUp = XMLoadFloat3(&mUp);
+	XMVECTOR vLook = XMLoadFloat3(&mLook);
 	XMVECTOR vPosition = XMLoadFloat3(&mPos);
 
-	////Rebuild View MX Input Row Vecs 1-3 in a Orthronormal fashion
-	//Look doesn't need Cross Product to find
+	//(Camera's Orientation)
+	//Re-Orthonormalize Basis Vectors
 	vLook = XMVector3Normalize(vLook);
-	//Up needs Look and Right crossed
 	vUp = XMVector3Normalize(XMVector3Cross(vLook, vRight));
-	//Right is using normalized Look and Up so the result is normalized already
 	vRight = XMVector3Cross(vUp, vLook);
-
-	//Store into floats
-	XMStoreFloat3(&mLook, vLook);
-	XMStoreFloat3(&mUp, vUp);
-	XMStoreFloat3(&mRight, vRight);
-
-	//4th Column Values
-	float mRightW = 0.0f;
-	float mUpW	  = 0.0f;
-	float mLookW  = 0.0f;
-	float newPositionVecWComponent = 1.0f;
-
-	//Each Position Vector Component must be recalculated
-	//newPositionComponent = currPositionVec * currAppropriateNormailzedAxis
-	float newPositionVecXComponent = -XMVectorGetX(XMVector3Dot(vPosition, vRight));
-	float newPositionVecYComponent = -XMVectorGetX(XMVector3Dot(vPosition, vUp));
-	float newPositionVecZComponent = -XMVectorGetX(XMVector3Dot(vPosition, vLook));
 	
-	////Populate View Matrix - Finally
-	//1st Row - X Right Vector
+	XMStoreFloat3(&mRight, vRight);
+	XMStoreFloat3(&mUp, vUp);
+	XMStoreFloat3(&mLook, vLook);
+
+	//(Camera's Position)
+	//newPos = currPos * normalizedDirectionVec
+	float newXPos = -XMVectorGetX(XMVector3Dot(vPosition, vRight));
+	float newYPos = -XMVectorGetX(XMVector3Dot(vPosition, vUp));
+	float newZPos = -XMVectorGetX(XMVector3Dot(vPosition, vLook));
+
+	//Save
+	///mView(Row, Col)
 	mView(0, 0) = mRight.x;
 	mView(0, 1) = mRight.y;
 	mView(0, 2) = mRight.z;
-	mView(0, 3) = mRightW;
-	//2nd Row - Y Up Vector
+	mView(0, 3) = 0.0f;
+
 	mView(1, 0) = mUp.x;
 	mView(1, 1) = mUp.y;
 	mView(1, 2) = mUp.z;
-	mView(1, 3) = mUpW;
-	//3rd Row - Z Look Vector
+	mView(1, 3) = 0.0f;
+
 	mView(2, 0) = mLook.x;
 	mView(2, 1) = mLook.y;
 	mView(2, 2) = mLook.z;
-	mView(2, 3) = mLookW;
-	//4th Row - Position Vector
-	mView(3, 0) = newPositionVecXComponent;
-	mView(3, 1) = newPositionVecYComponent;
-	mView(3, 2) = newPositionVecZComponent;
-	mView(3, 3) = newPositionVecWComponent;
+	mView(2, 3) = 0.0f;
+
+	mView(3, 0) = newXPos;
+	mView(3, 1) = newYPos;
+	mView(3, 2) = newZPos;
+	mView(3, 3) = 1.0f;
 }

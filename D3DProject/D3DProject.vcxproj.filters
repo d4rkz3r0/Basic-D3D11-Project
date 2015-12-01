@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D3DUtils.cpp">
+      <Filter>Base App\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="D3DBase.cpp">
+      <Filter>Base App</Filter>
+    </ClCompile>
+    <ClCompile Include="XTime.cpp">
+      <Filter>Base App\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="D3DApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeometryFactory.cpp">
+      <Filter>Source Files\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="DDSTextureLoader.cpp">
+      <Filter>Base App\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Source Files\Camera</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="D3DUtils.h">
+      <Filter>Base App\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="D3DBase.h">
+      <Filter>Base App</Filter>
+    </ClInclude>
+    <ClInclude Include="XTime.h">
+      <Filter>Base App\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="GeometryFactory.h">
+      <Filter>Source Files\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="DDSTextureLoader.h">
+      <Filter>Base App\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Source Files\Camera</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{9a4da072-4f44-4362-95bd-e96876c7455c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Base App">
+      <UniqueIdentifier>{d323c779-7682-4ea5-a8c9-30af7b39bcb0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Base App\Utils">
+      <UniqueIdentifier>{f87ed3c8-3702-46e8-a001-3f37ca985113}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Geometry">
+      <UniqueIdentifier>{1866d027-9a00-4a8c-b488-e498a199d777}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shaders">
+      <UniqueIdentifier>{b6645a74-aee0-4ce8-9a4b-ce4cb35eb464}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shaders\HLSL Source">
+      <UniqueIdentifier>{72791cfe-be6c-4abe-bd3b-ebbd6d27357e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shaders\Compiled ByteCode">
+      <UniqueIdentifier>{ac95cf2c-c4f2-4797-81e0-e2c2364eaaed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Camera">
+      <UniqueIdentifier>{fd3fde4c-d88d-46e4-8d4a-6d97fb8e6464}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="PixelShader.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source</Filter>
+    </FxCompile>
+    <FxCompile Include="VertexShader.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyBoxVertexShader.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyBoxPixelShader.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="PixelShader.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+    <None Include="VertexShader.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+    <None Include="SkyBoxPixelShader.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+    <None Include="SkyBoxVertexShader.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+  </ItemGroup>
+</Project>

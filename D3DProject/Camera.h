@@ -1,6 +1,3 @@
-//Notes: Save and Load to and from FLOATS, use temporary XMVECTORS
-//for XM Math Calculations but always save your calculations
-//to the freaking class floats!
 #pragma once
 #include <DirectXMath.h>
 using namespace DirectX;
@@ -8,49 +5,50 @@ using namespace DirectX;
 class Camera
 {
 	public:
-		//Constructor & Destructor
 		Camera();
 		~Camera();
 
 		//Accessors & Mutators
 		XMFLOAT3 GetRight();
-		XMVECTOR GetRightXM();
 		XMFLOAT3 GetUp();
-		XMVECTOR GetUpXM();
 		XMFLOAT3 GetLook();
-		XMVECTOR GetLookXM();
 		XMFLOAT3 GetPosition();
-		XMVECTOR GetPositionXM();
-		XMMATRIX GetView() const;
-		//XMMATRIX GetProj() const;
-		//XMMATRIX GetViewProj() const;
 		void SetRight(float x, float y, float z);
 		void SetUp(float x, float y, float z);
 		void SetLook(float x, float y, float z);
 		void SetPosition(float x, float y, float z);
 		void SetPosition(XMFLOAT3& position);
+		void SetTarget(float x, float y, float z);
+
+		//SIMD Accessors
+		XMVECTOR GetUpXM();
+		XMVECTOR GetRightXM();
+		XMVECTOR GetLookXM();
+		XMVECTOR GetPositionXM();
+		XMMATRIX GetView() const;
+		XMMATRIX GetProj() const;
+		XMMATRIX GetViewProj() const;
 
 		//Camera & Frustum
-		//void BuildFrustum(float foVY, float aspectRatio, float nearZ, float farZ);
-		void PrepLookAt(XMFLOAT3& position, XMFLOAT3& target, XMFLOAT3& up);
-		void BuildLookAt(XMVECTOR _vPosition, XMVECTOR _vTarget, XMVECTOR _vUp); //FPS Style Y UpVec
+		void SetFrustum(float foVY, float aspectRatio, float nearZ, float farZ);
 
-		////Main Camera Functions
-		//Local Translation
-		void Strafe(float moveSpeed);
-		void Walk(float moveSpeed);
-		//Local Rotation - Quaternion Support? Nope.avi
-		void Pitch(float angle);
-		//Global Rotation
-		void RotateY(float angle);
-		//Global Y Translation
-		void VFly(float moveSpeed);
+		//View Matrix Helpers (Optional)
+		void PrepView(XMFLOAT3& position, XMFLOAT3& target, XMFLOAT3& up);
+		void SetView(XMVECTOR _vPosition, XMVECTOR _vTarget, XMVECTOR _vUp); 
 
-		void UpdateViewMatrix();
+		//Camera Transformation
+		void VFly(float moveSpeed);   //newPos = (directionToMove * vectorYouNeedToMove) + currPos
+		void Strafe(float moveSpeed); //newPos = (directionToMove * vectorYouNeedToMove) + currPos
+		void Step(float moveSpeed);   //newPos = (directionToMove * vectorYouNeedToMove) + currPos
+		void Pitch(float angle);      //newOrientation = (upVec & lookVec * rightMX)
+		void RotateY(float angle);    //newOrientation = (allVecs * globalYMX)
+		void Look(float xAngle, float yAngle, float zAngle); //Quaternion-Based Rotation
+
+		bool mReverseMult = false;
+		void UpdateViewMatrix(); //Maintain Orthonormalcy (Not a word)
 
 	private:
-		////Camera's Local Coordinate System
-		//Floats for easy storing and loading
+		//Camera's Local Coordinate System
 		XMFLOAT3 mRight;
 		XMFLOAT3 mUp;
 		XMFLOAT3 mLook;
@@ -64,5 +62,8 @@ class Camera
 
 		//Camera and it's Frustum
 		XMFLOAT4X4 mView;
-		//XMFLOAT4X4 mProj;
+		XMFLOAT4X4 mProj;
+
+		//Misc
+		const float mSpeedScalar = 10.0f;
 };
