@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <WindowsX.h>
 #include <d3d11.h>
+
 #include <DirectXMath.h>
 #include <vector>
 #include <ctime>
@@ -10,6 +11,8 @@
 #include <string>
 #include <sstream>
 #include "DDSTextureLoader.h"
+#include "inc/d3dx11effect.h"
+#include "inc/d3dxGlobal.h"
 
 #ifdef _DEBUG
 #define _CRTDBG_MAP_ALLOC

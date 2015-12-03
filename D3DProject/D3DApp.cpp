@@ -5,6 +5,8 @@
 #include "PixelShader.csh"
 #include "SkyBoxVertexShader.csh"
 #include "SkyBoxPixelShader.csh"
+#include "inc/D3Dcompiler.h"
+#include <d3dcompiler.h>
 
 class D3DApp : public D3DBase
 {
@@ -35,6 +37,7 @@ class D3DApp : public D3DBase
 	private:
 		GeometryFactory GeoFactory; //Object Factory v0.01, Static, ToDo: Model Loader encapsulation...
 		Camera mCamera;
+
 		//*******Scene Objects*******//
 		////Cube
 		//Info
@@ -86,6 +89,24 @@ class D3DApp : public D3DBase
 
 		////Current Object
 		XMMATRIX mWorld;
+
+
+		///*TEST AREA*/
+		XMMATRIX cameraInWorldSpaceMX;
+
+		///*END TEST AREA*/
+
+		////Effects11
+		//ID3DX11Effect* mEffect;
+		//ID3DX11EffectTechnique* mTechnique;
+		//ID3DX11EffectMatrixVariable* mfxWorldViewProj;
+		//ID3D11InputLayout* mEffectIL;
+		//XMMATRIX mEffectWorld;
+		//ID3D11Buffer* mEffectVB;
+		//ID3D11Buffer* mEffectIB;
+		//PCMeshData effectCubeInfo;
+
+
 
 		//*******D3D Objects*******//
 		//Creation Time Objects (InputLayouts, RasterStates, etc)
@@ -148,18 +169,49 @@ mStarIB(NULL)
 {
 	mWorld = XMMatrixIdentity();
 
+	//Effects 11 - Win10.1 + June2010DXSDK + VS 2013 +  > D3D 11.1 = A very unproductive first milestone.
+
+	//ID3D10Blob* compiledShader = 0;
+	//ID3D10Blob* compilationMsgs = 0;
+	//HRESULT HR;
+	//HR = D3DX11CompileEffectFromFile(L"color.fx", 0, 0, D3DCOMPILE_DEBUG, 0, mD3DDevice, &mEffect, &compilationMsgs);
+	//D3DCompileFromFile(L"color.fx", 0, 0, 0, "fx_5_0", D3DCOMPILE_DEBUG, 0, &compiledShader, &compilationMsgs);
+	//D3DX11CreateEffectFromMemory(compiledShader->GetBufferPointer(), compiledShader->GetBufferSize(), 0, mD3DDevice, &mEffect);
+	//SAFE_RELEASE(compilationMsgs);
+	//D3DX11CompileEffectFromFile(L"color.fx", 0, 0, 0, 0, mD3DDevice, &mEffect, &compilationMsgs);
+	//D3DX11CompileFromFile(L"FX/color.fx", 0, 0, 0, "fx_5_0", shaderFlags,
+	//	0, 0, &compiledShader, &compilationMsgs, 0);
+	//D3DX11CreateEffectFromFile(L"color.fx", 0, mD3DDevice, &mEffect);
+
+	//mTechnique = mEffect->GetTechniqueByName("ColorTech");
+	//mfxWorldViewProj = mEffect->GetVariableByName("gWorldViewProj")->AsMatrix();
+
+	//D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
+	//{
+	//	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 2, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	//	{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	//};
+
+	//D3DX11_PASS_DESC passDesc;
+	//mTechnique->GetPassByIndex(0)->GetDesc(&passDesc);
+	//mD3DDevice->CreateInputLayout(vertexDesc, 2, passDesc.pIAInputSignature,
+	//	passDesc.IAInputSignatureSize, &mEffectIL);
+
+
 	XMMATRIX IdentityMX = XMMatrixIdentity();
 	XMStoreFloat4x4(&mCube, IdentityMX);
 	XMStoreFloat4x4(&mGrid, IdentityMX);
 	XMStoreFloat4x4(&mStar, IdentityMX);
 	XMStoreFloat4x4(&mSkyBox, IdentityMX);
 
+	cameraInWorldSpaceMX = XMMatrixIdentity();
+
 	//Camera Initialization
 	mCamera.SetPosition(0.0f, 1.0f, -5.5f);
 
 	//Grid's Initial Transformation
 	XMMATRIX GridTransformMX = XMMatrixIdentity();
-	XMMATRIX GridScalingMX = XMMatrixScaling(3.0f, 1.0f, 3.0f);
+	XMMATRIX GridScalingMX = XMMatrixScaling(30.0f, 1.0f, 30.0f);
 	XMMATRIX GridTranslationMX = XMMatrixTranslation(0.0f, -1.0f, 0.0f);
 	GridTransformMX = XMMatrixMultiply(GridScalingMX, GridTranslationMX);
 	XMStoreFloat4x4(&mGrid, GridTransformMX);
@@ -260,21 +312,9 @@ void D3DApp::Update(float deltaTime)
 		mCamera.VFly(-deltaTime);
 	}
 
-	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
-	{
-		mCamera.RotateY(deltaTime);
-	}
-
-	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
-	{
-		mCamera.RotateY(-deltaTime);
-	}
-
 	mCamera.UpdateViewMatrix();
 	XMMATRIX viewProj = mCamera.GetViewProj();
 	
-
-
 	////Object Updates
 	//Cube
 	mWorld = XMLoadFloat4x4(&mCube);
@@ -327,6 +367,34 @@ void D3DApp::Draw()
 	mD3DDeviceContext->ClearRenderTargetView(mRenderTargetView, mClearColor);
 	mD3DDeviceContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
+
+	////Effects11
+	//mD3DDeviceContext->IASetInputLayout(mEffectIL);
+	//mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//UINT effectStride = sizeof(PosColVertex);
+	//UINT effectOffset = 0;
+
+	//mD3DDeviceContext->IASetVertexBuffers(2, 1, &mEffectVB, &effectStride, &effectOffset);
+	//mD3DDeviceContext->IASetIndexBuffer(mEffectIB, DXGI_FORMAT_R32_UINT, 0);
+
+	////Consts
+	//XMMATRIX world = mEffectWorld;
+	//XMMATRIX view = mCamera.GetView();
+	//XMMATRIX proj = mCamera.GetProj();
+	//XMMATRIX worldViewProj = world*view*proj;
+	//mfxWorldViewProj->SetMatrix(reinterpret_cast<float*>(&worldViewProj));
+
+	//D3DX11_TECHNIQUE_DESC techDesc;
+	//mTechnique->GetDesc(&techDesc);
+	//for (UINT pass = 0; techDesc.Passes; ++pass)
+	//{
+	//	mTechnique->GetPassByIndex(0)->Apply(0, mD3DDeviceContext);
+
+	//	mD3DDeviceContext->DrawIndexed(36, 0, 0);
+	//}
+	////End Effects11
+
+
 	//Cube's Render Options
 	UINT stride = sizeof(PosColVertex);
 	UINT offset = 0;
@@ -377,6 +445,31 @@ void D3DApp::Draw()
 //Might concatenate buffers once this gets out of hand.
 void D3DApp::BuildGeometryAndBuffers()
 {
+	////Effect Cube
+	//GeoFactory.GenerateCube(effectCubeInfo);
+	//D3D11_BUFFER_DESC vbdeffect;
+	//ZeroMemory(&vbdeffect, sizeof(vbdeffect));
+	//vbdeffect.Usage = D3D11_USAGE_IMMUTABLE;
+	//vbdeffect.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	//vbdeffect.ByteWidth = effectCubeInfo.vbSize;
+
+	//D3D11_SUBRESOURCE_DATA vbideffect;
+	//ZeroMemory(&vbideffect, sizeof(vbideffect));
+	//vbideffect.pSysMem = &effectCubeInfo.Vertices[0];
+	//mD3DDevice->CreateBuffer(&vbdeffect, &vbideffect, &mEffectVB);
+
+	//D3D11_BUFFER_DESC ibdeffect;
+	//ZeroMemory(&ibdeffect, sizeof(ibdeffect));
+	//ibdeffect.Usage = D3D11_USAGE_IMMUTABLE;
+	//ibdeffect.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	//ibdeffect.ByteWidth = effectCubeInfo.ibSize;
+
+	//D3D11_SUBRESOURCE_DATA ibideffect;
+	//ZeroMemory(&ibideffect, sizeof(ibideffect));
+	//ibideffect.pSysMem = &effectCubeInfo.Indices[0];
+	//mD3DDevice->CreateBuffer(&ibdeffect, &ibideffect, &mEffectIB);
+
+
 	//Cube
 	GeoFactory.GenerateCube(cubeInfo);
 	D3D11_BUFFER_DESC vbd;

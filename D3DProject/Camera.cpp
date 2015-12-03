@@ -147,7 +147,6 @@ void Camera::Step(float moveSpeed)
 
 void Camera::VFly(float moveSpeed)
 {
-	
 	XMVECTOR vMoveDirection = XMVectorReplicate(moveSpeed);
 	vMoveDirection = XMVectorScale(vMoveDirection, mSpeedScalar);
 	XMVECTOR vGlobalY = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
@@ -196,15 +195,10 @@ void Camera::Look(float xAngle, float yAngle, float zAngle)
 	//Pitch(X), Yaw(Y), Roll Order(Z) (Ignore Function Name)
 	XMMATRIX globalRotationMX = XMMatrixRotationRollPitchYaw(xAngle, yAngle, zAngle);
 
-
 	//Loaded
 	XMVECTOR vRight = XMLoadFloat3(&mRight);
 	XMVECTOR vUp = XMLoadFloat3(&mUp);
 	XMVECTOR vLook = XMLoadFloat3(&mLook);
-
-	
-	
-	
 
 	//Saved
 	XMStoreFloat3(&mRight, XMVector3TransformNormal(vRight, globalRotationMX));
