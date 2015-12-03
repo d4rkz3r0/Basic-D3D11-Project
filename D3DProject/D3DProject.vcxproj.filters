@@ -22,6 +22,9 @@
     <ClCompile Include="Camera.cpp">
       <Filter>Source Files\Camera</Filter>
     </ClCompile>
+    <ClCompile Include="ModelLoader.cpp">
+      <Filter>Base App\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="D3DUtils.h">
@@ -46,6 +49,9 @@
       <Filter>Base App\Utils</Filter>
     </ClInclude>
     <ClInclude Include="inc\d3dxGlobal.h">
+      <Filter>Base App\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelLoader.h">
       <Filter>Base App\Utils</Filter>
     </ClInclude>
   </ItemGroup>

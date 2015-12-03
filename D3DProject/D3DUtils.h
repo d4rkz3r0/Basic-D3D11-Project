@@ -10,6 +10,7 @@
 #include <cassert>
 #include <string>
 #include <sstream>
+#include <fstream>
 #include "DDSTextureLoader.h"
 #include "inc/d3dx11effect.h"
 #include "inc/d3dxGlobal.h"
@@ -19,6 +20,7 @@
 #include <crtdbg.h>
 #endif
 
+using namespace std;
 using namespace DirectX;
 
 //Colors

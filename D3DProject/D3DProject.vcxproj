@@ -187,6 +187,7 @@
     <ClInclude Include="GeometryFactory.h" />
     <ClInclude Include="inc\d3dx11effect.h" />
     <ClInclude Include="inc\d3dxGlobal.h" />
+    <ClInclude Include="ModelLoader.h" />
     <ClInclude Include="XTime.h" />
   </ItemGroup>
   <ItemGroup>
@@ -196,6 +197,7 @@
     <ClCompile Include="D3DUtils.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp" />
     <ClCompile Include="GeometryFactory.cpp" />
+    <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="XTime.cpp" />
   </ItemGroup>
   <ItemGroup>
