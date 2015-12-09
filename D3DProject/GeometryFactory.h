@@ -1,28 +1,13 @@
 #pragma once
 #include "D3DUtils.h"
+#include "VertexRefs.h"
 
-struct PosVertex
-{
-	XMFLOAT3 position;
-};
-
-struct PosColVertex
-{
-	XMFLOAT3 position;
-	XMFLOAT4 color;
-};
-
-//struct Vertex
-//{
-//	XMFLOAT3 position;
-//	XMFLOAT3 normal;
-//	XMFLOAT2 texCoord;
-//};
+struct aiMesh;
 
 struct PMeshData
 {
-	std::vector<PosVertex> Vertices;
-	std::vector<UINT> Indices;
+	vector<PosVertex> Vertices;
+	vector<UINT> Indices;
 	UINT vbCount;
 	UINT vbSize;
 	UINT ibCount;
@@ -31,18 +16,51 @@ struct PMeshData
 
 struct PCMeshData
 {
-	std::vector<PosColVertex> Vertices;
-	std::vector<UINT> Indices;
+	vector<PosColVertex> Vertices;
+	vector<UINT> Indices;
 	UINT vbCount;
 	UINT vbSize;
 	UINT ibCount;
 	UINT ibSize;
 };
 
-
-struct cbPerObject
+struct MeshData
 {
-	XMFLOAT4X4 WVP;
+	vector<Vertex> Vertices;
+	vector<UINT> Indices;
+	UINT vbCount;
+	UINT vbSize;
+	UINT ibCount;
+	UINT ibSize;
+};
+
+struct FMeshData
+{
+	FMeshData(){}
+
+	FMeshData(vector<FullVertex>& verts, vector<UINT> indices, UINT faceCount) :
+		mVertices(verts),
+		mIndices(indices),
+		mFaceCount(faceCount){}
+
+	vector<FullVertex> mVertices;
+	vector<UINT> mIndices;
+	UINT mFaceCount;
+	
+	//Temp Containers to push into the mVertices after model loading.
+	vector<XMFLOAT3> mNormals;
+	vector<XMFLOAT3> mTangents;
+	vector<XMFLOAT3> mTexCoords;
+};
+
+struct FModelInfo
+{
+	FModelInfo(){}
+
+	vector<FMeshData> mObjectMeshes;
+	UINT mNumMeshses;
+
+
 };
 
 class GeometryFactory
@@ -55,4 +73,6 @@ class GeometryFactory
 		void GenerateCube(PCMeshData& meshData);
 		void GenerateGrid(PCMeshData& meshData);
 		void GenerateStar(PCMeshData& meshData);
+		void GenerateModel(FMeshData& meshData, string& fileName, bool UVFlag = false, bool TriangSmoothNormalsFlag = true);
+		void GenerateModelBuffers(ID3D11Device* device, FMeshData& meshData, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer);
 };

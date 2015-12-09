@@ -1,5 +1,4 @@
 #pragma once
-
 #include "D3DUtils.h"
 #include "XTime.h"
 

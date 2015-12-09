@@ -3,17 +3,21 @@
 #include <Windows.h>
 #include <WindowsX.h>
 #include <d3d11.h>
-
+#include <dinput.h>
 #include <DirectXMath.h>
 #include <vector>
-#include <ctime>
 #include <cassert>
+#include <memory>
+#include <ctime>
+#include <algorithm>
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <istream>
 #include "DDSTextureLoader.h"
-#include "inc/d3dx11effect.h"
-#include "inc/d3dxGlobal.h"
+#include "assimp/include/assimp/Importer.hpp"
+#include "assimp/include/assimp/scene.h"
+#include "assimp/include/assimp/postprocess.h"
 
 #ifdef _DEBUG
 #define _CRTDBG_MAP_ALLOC
@@ -38,4 +42,6 @@ namespace Colors
 
 //Useful Macros
 #define SAFE_RELEASE(comObj) { if ( (comObj) ) { (comObj)->Release(); (comObj) = 0; } }
-#define SAFE_DELETE(myObj) if( (myObj) != NULL ) delete (myObj); (myObj) = NULL;
+#define SAFE_DELETE(myObj) if( (myObj) != nullptr ) delete (myObj); (myObj) = nullptr;
+#define SAFE_DELETES(myObjs) if( (myObjs) != nullptr ) delete[] (myObjs); (myObjs) = nullptr;
+

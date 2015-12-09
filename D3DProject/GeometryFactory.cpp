@@ -237,3 +237,137 @@ void GeometryFactory::GenerateSkyBox(PMeshData& meshData)
 	meshData.ibSize = sizeof(UINT) * meshData.ibCount;
 	meshData.Indices.assign(&indices[0], &indices[meshData.ibCount]);
 }
+
+void GeometryFactory::GenerateModel(FMeshData& meshData, string& fileName, bool UVFlag, bool TriangSmoothNormalsFlag)
+{
+	//Declare Importer
+	Assimp::Importer importer;
+
+	//Triangulate Flag + SortByPrimtiveType = No Point or Line Meshes.
+	UINT flags = 0;
+	if (TriangSmoothNormalsFlag)
+	{
+		flags |= aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_GenSmoothNormals;
+	}
+
+	if (UVFlag)
+	{
+		flags |= aiProcess_FlipUVs;
+	}
+
+	//Read In
+	const aiScene* scene = importer.ReadFile(fileName, flags);
+
+	UINT numMeshesInModel = scene->mNumMeshes;
+	if (scene->HasMeshes())
+	{
+		for (UINT i = 0; i < numMeshesInModel; i++)
+		{
+			aiMesh* tempMesh = scene->mMeshes[i];
+
+			//Allocate Space
+			UINT numOfVerticesInMesh = tempMesh->mNumVertices;
+			meshData.mVertices.reserve(numOfVerticesInMesh);
+			meshData.mVertices.resize(numOfVerticesInMesh);
+
+			//Position
+			for (size_t i = 0; i < numOfVerticesInMesh; i++)
+			{
+				float tempX = tempMesh->mVertices[i].x;
+				float tempY = tempMesh->mVertices[i].y;
+				float tempZ = tempMesh->mVertices[i].z;
+
+				meshData.mVertices[i].position.x = tempX;
+				meshData.mVertices[i].position.y = tempY;
+				meshData.mVertices[i].position.z = tempZ;
+			}
+
+			//Indices
+			if (tempMesh->HasFaces())
+			{
+				meshData.mFaceCount = tempMesh->mNumFaces;
+				UINT numFaces = tempMesh->mNumFaces;
+				UINT numInidices = numFaces * 3;
+
+				meshData.mIndices.reserve(numInidices);
+				meshData.mIndices.resize(numInidices);
+
+				for (size_t i = 0; i < numFaces; i++)
+				{
+					aiFace* tempFace = &tempMesh->mFaces[i];
+					assert(tempFace->mNumIndices == 3);
+
+					meshData.mIndices.push_back(tempFace->mIndices[0]);
+					meshData.mIndices.push_back(tempFace->mIndices[1]);
+					meshData.mIndices.push_back(tempFace->mIndices[2]);
+				}
+			}
+
+			//Normals
+			if (tempMesh->HasNormals())
+			{
+				for (size_t i = 0; i < numOfVerticesInMesh; i++)
+				{
+					float tempX = tempMesh->mNormals[i].x;
+					float tempY = tempMesh->mNormals[i].y;
+					float tempZ = tempMesh->mNormals[i].z;
+
+					meshData.mVertices[i].normal = XMFLOAT3(tempX, tempY, tempZ);
+				}
+			}
+
+			//Tangents
+			if (tempMesh->HasTangentsAndBitangents())
+			{
+				for (size_t i = 0; i < numOfVerticesInMesh; i++)
+				{
+					float tempX = tempMesh->mTangents[i].x;
+					float tempY = tempMesh->mTangents[i].y;
+					float tempZ = tempMesh->mTangents[i].z;
+
+					meshData.mVertices[i].tangent = XMFLOAT3(tempX, tempY, tempZ);
+				}
+			}
+
+			//Tex Coords
+			if (tempMesh->GetNumUVChannels() != 0)
+			{
+				aiVector3D* aiTextureCoordinates = tempMesh->mTextureCoords[0];
+
+				for (size_t i = 0; i < numOfVerticesInMesh; i++)
+				{
+					float tempX = aiTextureCoordinates[i].x;
+					float tempY = aiTextureCoordinates[i].y;
+
+					meshData.mVertices[i].texCoords = XMFLOAT2(tempX, tempY);
+				}
+			}
+		}
+	}
+}
+
+void GeometryFactory::GenerateModelBuffers(ID3D11Device* device, FMeshData& meshData, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer)
+{
+	D3D11_BUFFER_DESC vertexBufferDesc;
+	ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
+	vertexBufferDesc.ByteWidth = sizeof(FullVertex) * meshData.mVertices.size();
+	vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA vertexSubResourceData;
+	ZeroMemory(&vertexSubResourceData, sizeof(vertexSubResourceData));
+	vertexSubResourceData.pSysMem = &meshData.mVertices[0];
+	device->CreateBuffer(&vertexBufferDesc, &vertexSubResourceData, vertexBuffer);
+
+	D3D11_BUFFER_DESC indexBufferDesc;
+	ZeroMemory(&indexBufferDesc, sizeof(indexBufferDesc));
+	indexBufferDesc.ByteWidth = sizeof(UINT) * meshData.mIndices.size();
+	indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA indexSubResourceData;
+	ZeroMemory(&indexSubResourceData, sizeof(indexSubResourceData));
+	indexSubResourceData.pSysMem = &meshData.mIndices[0];
+	device->CreateBuffer(&indexBufferDesc, &indexSubResourceData, indexBuffer);
+
+}

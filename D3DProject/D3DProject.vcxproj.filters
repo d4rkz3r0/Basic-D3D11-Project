@@ -1,14 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="D3DUtils.cpp">
-      <Filter>Base App\Utils</Filter>
-    </ClCompile>
     <ClCompile Include="D3DBase.cpp">
       <Filter>Base App</Filter>
-    </ClCompile>
-    <ClCompile Include="XTime.cpp">
-      <Filter>Base App\Utils</Filter>
     </ClCompile>
     <ClCompile Include="D3DApp.cpp">
       <Filter>Source Files</Filter>
@@ -16,43 +10,58 @@
     <ClCompile Include="GeometryFactory.cpp">
       <Filter>Source Files\Geometry</Filter>
     </ClCompile>
-    <ClCompile Include="DDSTextureLoader.cpp">
-      <Filter>Base App\Utils</Filter>
-    </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>Source Files\Camera</Filter>
     </ClCompile>
-    <ClCompile Include="ModelLoader.cpp">
-      <Filter>Base App\Utils</Filter>
+    <ClCompile Include="XTime.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="DDSTextureLoader.cpp">
+      <Filter>Source Files\Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="D3DUtils.h">
-      <Filter>Base App\Utils</Filter>
-    </ClInclude>
     <ClInclude Include="D3DBase.h">
       <Filter>Base App</Filter>
-    </ClInclude>
-    <ClInclude Include="XTime.h">
-      <Filter>Base App\Utils</Filter>
     </ClInclude>
     <ClInclude Include="GeometryFactory.h">
       <Filter>Source Files\Geometry</Filter>
     </ClInclude>
-    <ClInclude Include="DDSTextureLoader.h">
-      <Filter>Base App\Utils</Filter>
-    </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>Source Files\Camera</Filter>
     </ClInclude>
-    <ClInclude Include="inc\d3dx11effect.h">
-      <Filter>Base App\Utils</Filter>
+    <ClInclude Include="D3DApp.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\d3dxGlobal.h">
-      <Filter>Base App\Utils</Filter>
+    <ClInclude Include="CBRefs.h">
+      <Filter>Source Files\Constant Buffers</Filter>
     </ClInclude>
-    <ClInclude Include="ModelLoader.h">
-      <Filter>Base App\Utils</Filter>
+    <ClInclude Include="CBPerObj.h">
+      <Filter>Source Files\Constant Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="ConstantBuffer.h">
+      <Filter>Source Files\Constant Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderRefs.h">
+      <Filter>Source Files\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="XTime.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="D3DUtils.h">
+      <Filter>Base App</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexRefs.h">
+      <Filter>Source Files\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="DDSTextureLoader.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="CBLightInfo.h">
+      <Filter>Source Files\Constant Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="CBMiscInfo.h">
+      <Filter>Source Files\Constant Buffers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -61,9 +70,6 @@
     </Filter>
     <Filter Include="Base App">
       <UniqueIdentifier>{d323c779-7682-4ea5-a8c9-30af7b39bcb0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Base App\Utils">
-      <UniqueIdentifier>{f87ed3c8-3702-46e8-a001-3f37ca985113}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Geometry">
       <UniqueIdentifier>{1866d027-9a00-4a8c-b488-e498a199d777}</UniqueIdentifier>
@@ -80,35 +86,50 @@
     <Filter Include="Source Files\Camera">
       <UniqueIdentifier>{fd3fde4c-d88d-46e4-8d4a-6d97fb8e6464}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Utils">
+      <UniqueIdentifier>{f87ed3c8-3702-46e8-a001-3f37ca985113}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Constant Buffers">
+      <UniqueIdentifier>{f6d49ed8-b8ed-46a4-8a21-749e10c16c0d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="PixelShader.hlsl">
+    <FxCompile Include="BasicPixelShader.hlsl">
       <Filter>Source Files\Shaders\HLSL Source</Filter>
     </FxCompile>
-    <FxCompile Include="VertexShader.hlsl">
-      <Filter>Source Files\Shaders\HLSL Source</Filter>
-    </FxCompile>
-    <FxCompile Include="SkyBoxVertexShader.hlsl">
+    <FxCompile Include="BasicVertexShader.hlsl">
       <Filter>Source Files\Shaders\HLSL Source</Filter>
     </FxCompile>
     <FxCompile Include="SkyBoxPixelShader.hlsl">
       <Filter>Source Files\Shaders\HLSL Source</Filter>
     </FxCompile>
-    <FxCompile Include="color.fx">
+    <FxCompile Include="SkyBoxVertexShader.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source</Filter>
+    </FxCompile>
+    <FxCompile Include="TextureLightingVS.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source</Filter>
+    </FxCompile>
+    <FxCompile Include="TextureLightingPS.hlsl">
       <Filter>Source Files\Shaders\HLSL Source</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="PixelShader.csh">
+    <None Include="BasicPixelShader.csh">
       <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
     </None>
-    <None Include="VertexShader.csh">
+    <None Include="BasicVertexShader.csh">
       <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
     </None>
     <None Include="SkyBoxPixelShader.csh">
       <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
     </None>
     <None Include="SkyBoxVertexShader.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+    <None Include="TextureLightingPS.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+    <None Include="TextureLightingVS.csh">
       <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
     </None>
   </ItemGroup>

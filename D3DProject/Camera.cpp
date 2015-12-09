@@ -1,54 +1,55 @@
 #include "Camera.h"
 
-//Builds Camera at the Origin
 Camera::Camera() :
-	mPos(0.0f, 0.0f, 0.0f),
-	mRight(1.0f, 0.0f, 0.0f), 
-	mUp(0.0f, 1.0f, 0.0f),
-	mLook(0.0f, 0.0f, 1.0f),
-	mAspect(1.77f)
+mPos(0.0f, 0.0f, 0.0f),
+mRight(1.0f, 0.0f, 0.0f),
+mUp(0.0f, 1.0f, 0.0f),
+mLook(0.0f, 0.0f, 1.0f)
 {
-	SetFrustum(XM_PIDIV2, mAspect, 0.5f, 1000.f);
+	SetFrustum(XM_PIDIV4, 1.0f, 0.5f, 1000.f);
 }
 
-Camera::~Camera(){}
+Camera::~Camera()
+{
 
-XMFLOAT3 Camera::GetRight()
+}
+
+XMFLOAT3 Camera::GetRight() const
 {
 	return mRight;
 }
 
-XMVECTOR Camera::GetRightXM()
+XMVECTOR Camera::GetRightXM() const
 {
 	return XMLoadFloat3(&mRight);
 }
 
-XMFLOAT3 Camera::GetUp()
+XMFLOAT3 Camera::GetUp() const
 {
 	return mUp;
 }
 
-XMVECTOR Camera::GetUpXM()
+XMVECTOR Camera::GetUpXM() const
 {
 	return XMLoadFloat3(&mUp);
 }
 
-XMFLOAT3 Camera::GetLook()
+XMFLOAT3 Camera::GetLook() const
 {
 	return mLook;
 }
 
-XMVECTOR Camera::GetLookXM()
+XMVECTOR Camera::GetLookXM() const
 {
 	return XMLoadFloat3(&mLook);
 }
 
-XMFLOAT3 Camera::GetPosition()
+XMFLOAT3 Camera::GetPosition() const
 {
 	return mPos;
 }
 
-XMVECTOR Camera::GetPositionXM()
+XMVECTOR Camera::GetPositionXM() const
 {
 	return XMLoadFloat3(&mPos);
 }
@@ -88,7 +89,7 @@ void Camera::SetPosition(float x, float y, float z)
 	mPos = XMFLOAT3(x, y, z);
 }
 
-void Camera::SetPosition(XMFLOAT3& position)
+void Camera::SetPosition(const XMFLOAT3& position)
 {
 	mPos = position;
 }
@@ -99,7 +100,7 @@ void Camera::SetFrustum(float foVY, float aspectRatio, float nearZ, float farZ)
 	mAspect = aspectRatio;
 	mNearZ = nearZ;
 	mFarZ = farZ;
-	
+
 	XMStoreFloat4x4(&mProj, XMMatrixPerspectiveFovLH(mFoVY, mAspect, mNearZ, mFarZ));
 }
 
@@ -119,53 +120,50 @@ void Camera::SetView(XMVECTOR _vPosition, XMVECTOR _vTarget, XMVECTOR _vUp)
 	XMVECTOR vRight = XMVector3Normalize(XMVector3Cross(_vUp, vLook));
 	XMVECTOR vUp = XMVector3Normalize(XMVector3Cross(vLook, vRight));
 
+	XMStoreFloat3(&mPos, _vPosition);
+	XMStoreFloat3(&mLook, vLook);
 	XMStoreFloat3(&mRight, vRight);
 	XMStoreFloat3(&mUp, vUp);
-	XMStoreFloat3(&mLook, vLook);
-	XMStoreFloat3(&mPos, _vPosition);
 }
 
 void Camera::Strafe(float moveSpeed)
 {
-	XMVECTOR vMoveDirection = XMVectorReplicate(moveSpeed);
-	vMoveDirection = XMVectorScale(vMoveDirection, mSpeedScalar);
+	XMVECTOR vMoveSpeed = XMVectorReplicate(moveSpeed);
 	XMVECTOR vPosition = XMLoadFloat3(&mPos);
 	XMVECTOR vRight = XMLoadFloat3(&mRight);
 
-	XMStoreFloat3(&mPos, XMVectorMultiplyAdd(vMoveDirection, vRight, vPosition));
+	XMStoreFloat3(&mPos, XMVectorMultiplyAdd(vMoveSpeed, vRight, vPosition));
 }
 
 void Camera::Step(float moveSpeed)
 {
-	XMVECTOR vMoveDirection = XMVectorReplicate(moveSpeed);
-	vMoveDirection = XMVectorScale(vMoveDirection, mSpeedScalar);
+	XMVECTOR vMoveSpeed = XMVectorReplicate(moveSpeed);
 	XMVECTOR vPosition = XMLoadFloat3(&mPos);
 	XMVECTOR vLook = XMLoadFloat3(&mLook);
 
-	XMStoreFloat3(&mPos, XMVectorMultiplyAdd(vMoveDirection, vLook, vPosition));
+	XMStoreFloat3(&mPos, XMVectorMultiplyAdd(vMoveSpeed, vLook, vPosition));
 }
 
 void Camera::VFly(float moveSpeed)
 {
-	XMVECTOR vMoveDirection = XMVectorReplicate(moveSpeed);
-	vMoveDirection = XMVectorScale(vMoveDirection, mSpeedScalar);
+	XMVECTOR vMoveSpeed = XMVectorReplicate(moveSpeed);
 	XMVECTOR vGlobalY = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
 	XMVECTOR vPosition = XMLoadFloat3(&mPos);
 
-	XMStoreFloat3(&mPos, XMVectorMultiplyAdd(vMoveDirection, vGlobalY, vPosition));
+	XMStoreFloat3(&mPos, XMVectorMultiplyAdd(vMoveSpeed, vGlobalY, vPosition));
 }
 
 void Camera::Pitch(float angle)
 {
-	XMMATRIX camRightRotationMX = XMMatrixRotationAxis(XMLoadFloat3(&mRight), angle);
+	XMMATRIX camXRotationMX = XMMatrixRotationAxis(XMLoadFloat3(&mRight), angle);
 	
 	//Grab camera Y and Z axes
 	XMVECTOR vUp = XMLoadFloat3(&mUp);
 	XMVECTOR vLook = XMLoadFloat3(&mLook);
 
 	//Don't use RightRotationMX's position vector when multiplying
-	XMVECTOR vUpdatedUp = XMVector3TransformNormal(vUp, camRightRotationMX);
-	XMVECTOR vUpdatedLook = XMVector3TransformNormal(vLook, camRightRotationMX);
+	XMVECTOR vUpdatedUp = XMVector3TransformNormal(vUp, camXRotationMX);
+	XMVECTOR vUpdatedLook = XMVector3TransformNormal(vLook, camXRotationMX);
 
 	XMStoreFloat3(&mUp, vUpdatedUp);
 	XMStoreFloat3(&mLook, vUpdatedLook);
@@ -190,22 +188,6 @@ void Camera::RotateY(float angle)
 	XMStoreFloat3(&mUp, vUpdatedUp);
 }
 
-void Camera::Look(float xAngle, float yAngle, float zAngle)
-{
-	//Pitch(X), Yaw(Y), Roll Order(Z) (Ignore Function Name)
-	XMMATRIX globalRotationMX = XMMatrixRotationRollPitchYaw(xAngle, yAngle, zAngle);
-
-	//Loaded
-	XMVECTOR vRight = XMLoadFloat3(&mRight);
-	XMVECTOR vUp = XMLoadFloat3(&mUp);
-	XMVECTOR vLook = XMLoadFloat3(&mLook);
-
-	//Saved
-	XMStoreFloat3(&mRight, XMVector3TransformNormal(vRight, globalRotationMX));
-	XMStoreFloat3(&mUp, XMVector3TransformNormal(vUp, globalRotationMX));
-	XMStoreFloat3(&mLook, XMVector3TransformNormal(vLook, globalRotationMX));
-}
-
 void Camera::UpdateViewMatrix()
 {
 	//Load
@@ -220,10 +202,6 @@ void Camera::UpdateViewMatrix()
 	vUp = XMVector3Normalize(XMVector3Cross(vLook, vRight));
 	vRight = XMVector3Cross(vUp, vLook);
 	
-	XMStoreFloat3(&mRight, vRight);
-	XMStoreFloat3(&mUp, vUp);
-	XMStoreFloat3(&mLook, vLook);
-
 	//(Camera's Position)
 	//newPos = currPos * normalizedDirectionVec
 	float newXPos = -XMVectorGetX(XMVector3Dot(vPosition, vRight));
@@ -231,24 +209,27 @@ void Camera::UpdateViewMatrix()
 	float newZPos = -XMVectorGetX(XMVector3Dot(vPosition, vLook));
 
 	//Save
-	///mView(Row, Col)
+	XMStoreFloat3(&mRight, vRight);
+	XMStoreFloat3(&mUp, vUp);
+	XMStoreFloat3(&mLook, vLook);
+
 	mView(0, 0) = mRight.x;
-	mView(0, 1) = mRight.y;
-	mView(0, 2) = mRight.z;
-	mView(0, 3) = 0.0f;
-
-	mView(1, 0) = mUp.x;
-	mView(1, 1) = mUp.y;
-	mView(1, 2) = mUp.z;
-	mView(1, 3) = 0.0f;
-
-	mView(2, 0) = mLook.x;
-	mView(2, 1) = mLook.y;
-	mView(2, 2) = mLook.z;
-	mView(2, 3) = 0.0f;
-
+	mView(1, 0) = mRight.y;
+	mView(2, 0) = mRight.z;
 	mView(3, 0) = newXPos;
+
+	mView(0, 1) = mUp.x;
+	mView(1, 1) = mUp.y;
+	mView(2, 1) = mUp.z;
 	mView(3, 1) = newYPos;
+
+	mView(0, 2) = mLook.x;
+	mView(1, 2) = mLook.y;
+	mView(2, 2) = mLook.z;
 	mView(3, 2) = newZPos;
+
+	mView(0, 3) = 0.0f;
+	mView(1, 3) = 0.0f;
+	mView(2, 3) = 0.0f;
 	mView(3, 3) = 1.0f;
 }

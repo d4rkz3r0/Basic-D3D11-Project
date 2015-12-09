@@ -5,6 +5,8 @@ namespace
 	D3DBase* gD3DApp = 0;
 }
 
+
+
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	//Forward Messages properly, in the case of receiving messages before mMainWnd is initialized.
@@ -29,7 +31,7 @@ mDepthStencilBuffer(NULL),
 mRenderTargetView(NULL),
 mDepthStencilView(NULL),
 m4xMSAAQualityLevel(0),
-mEnable4xMSAA(false)
+mEnable4xMSAA(true)
 {
 	ZeroMemory(&mViewPort, sizeof(mViewPort));
 	gD3DApp = this;
@@ -43,6 +45,13 @@ D3DBase::~D3DBase()
 	SAFE_RELEASE(mSwapChain);
 	mD3DDeviceContext->ClearState(); //Unbind Resources and State Objects
 	SAFE_RELEASE(mD3DDeviceContext);
+
+#if 0
+	ID3D11Debug* debugDev;
+	mD3DDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&debugDev));
+	debugDev->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+	SAFE_RELEASE(debugDev);
+#endif
 	SAFE_RELEASE(mD3DDevice);
 }
 
@@ -71,7 +80,7 @@ UINT D3DBase::Run()
 			if (!mAppPaused)
 			{
 				CalcFPS();
-				Update(static_cast<float>(mTimer.Delta()));
+				Update(static_cast<float>(mTimer.SmoothDelta()));
 				Draw();
 			}
 			else
@@ -102,7 +111,6 @@ bool D3DBase::Init()
 
 void D3DBase::ResizeWindow()
 {
-	//j-i-c
 	assert(mD3DDevice);
 	assert(mD3DDeviceContext);
 	assert(mSwapChain);
@@ -309,7 +317,7 @@ bool D3DBase::Win32Init()
 		NULL);
 
 	ShowWindow(mMainWnd, SW_SHOW);
-	UpdateWindow(mMainWnd); //Not neccessary
+	UpdateWindow(mMainWnd);
 
 	return true;
 }

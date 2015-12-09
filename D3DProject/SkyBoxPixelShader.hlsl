@@ -1,7 +1,7 @@
 struct PS_IN
 {
 	float4 inPosH : SV_POSITION;
-	float3 inPosL : POSITION;
+	float3 inPosL : TEXCOORD;
 };
 
 //Shader Resources

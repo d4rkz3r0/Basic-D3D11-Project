@@ -1,141 +1,4 @@
-#include "D3DBase.h"
-#include "GeometryFactory.h"
-#include "Camera.h"
-#include "VertexShader.csh"
-#include "PixelShader.csh"
-#include "SkyBoxVertexShader.csh"
-#include "SkyBoxPixelShader.csh"
-#include "inc/D3Dcompiler.h"
-#include <d3dcompiler.h>
-
-class D3DApp : public D3DBase
-{
-	//Class Functions
-	public:
-		D3DApp(HINSTANCE hInstance);
-		~D3DApp();
-
-		//Boilerplate Code Abstracted Away
-		bool Init();
-		void ResizeWindow();
-		
-		//Implementations Must Be Provided
-		void Update(float deltaTime);
-		void Draw();
-
-		void OnMouseDown(WPARAM theButton, int x, int y);
-		void OnMouseUp(WPARAM theButton, int x, int y);
-		void OnMouseMove(WPARAM theButton, int x, int y);
-
-	private:
-		void BuildStateConfigurations();
-		void BuildGeometryAndBuffers();
-		void CompileShaders();
-		void DefineInputLayouts();
-
-	//Class Data Members
-	private:
-		GeometryFactory GeoFactory; //Object Factory v0.01, Static, ToDo: Model Loader encapsulation...
-		Camera mCamera;
-
-		//*******Scene Objects*******//
-		////Cube
-		//Info
-		PCMeshData cubeInfo; //Local Space
-		XMFLOAT4X4 mCube;  //World Space
-		//Buffers
-		ID3D11Buffer* mCubeVB;
-		ID3D11Buffer* mCubeIB;
-		ID3D11Buffer* mPerObjWVP;
-		//Shaders
-		ID3D11VertexShader* mCubeVS;
-		ID3D11PixelShader* mCubePS;
-
-		////Grid
-		//Info
-		PCMeshData gridInfo; //Local Space
-		XMFLOAT4X4 mGrid;  //World Space
-		//Buffers
-		ID3D11Buffer* mGridVB;
-		ID3D11Buffer* mPerObjWVPGrid;
-
-		////Star
-		//Info
-		PCMeshData starInfo; //Local Space
-		XMFLOAT4X4 mStar;  //World Space
-		//Buffers
-		ID3D11Buffer* mStarVB;
-		ID3D11Buffer* mStarIB;
-		ID3D11Buffer* mPerObjWVPStar;
-		//Orientation Matrices
-		XMMATRIX mStarRotationMX;
-		
-		////SkyBox
-		//Info
-		PMeshData skyBoxInfo; //Local Space
-		XMFLOAT4X4 mSkyBox;  //World Space
-		const wchar_t* mSkyBoxFileName;
-		//Buffers
-		ID3D11Buffer* mSkyBoxVB;
-		ID3D11Buffer* mSkyBoxIB;
-		ID3D11Buffer* mPerObjWVPSkyBox;
-		//Shaders
-		ID3D11VertexShader* mSkyBoxVS;
-		ID3D11PixelShader* mSkyBoxPS;
-		//Texture
-		ID3D11Texture2D* mCubeMapTexture;
-		//Resource Views
-		ID3D11ShaderResourceView* mCubeMapSRV;
-
-		////Current Object
-		XMMATRIX mWorld;
-
-
-		///*TEST AREA*/
-		XMMATRIX cameraInWorldSpaceMX;
-
-		///*END TEST AREA*/
-
-		////Effects11
-		//ID3DX11Effect* mEffect;
-		//ID3DX11EffectTechnique* mTechnique;
-		//ID3DX11EffectMatrixVariable* mfxWorldViewProj;
-		//ID3D11InputLayout* mEffectIL;
-		//XMMATRIX mEffectWorld;
-		//ID3D11Buffer* mEffectVB;
-		//ID3D11Buffer* mEffectIB;
-		//PCMeshData effectCubeInfo;
-
-
-
-		//*******D3D Objects*******//
-		//Creation Time Objects (InputLayouts, RasterStates, etc)
-		ID3D11InputLayout* mPosIL;
-		ID3D11InputLayout* mPosColIL;
-		ID3D11RasterizerState* mNoCullingRS;
-		ID3D11DepthStencilState* mLessEqualDSS;
-		ID3D11SamplerState* mLinearSSO;
-
-		//*******CPU Objects*******//
-		//CPU Side Const Buffers
-		cbPerObject mObjCB;
-		cbPerObject mObjCBGrid;
-		cbPerObject mObjCBStar;
-		cbPerObject mObjCBSkyBox;
-		//Win32
-		POINT mPrevMousePos;
-};
-
-//Just Because
-float angle = 0.0f;
-float speedScalar = 2.0f;
-float GetAngle(float deltaTime)
-{
-	deltaTime = deltaTime * speedScalar;
-	angle += deltaTime;
-	return angle;
-}
-
+#include "D3DApp.h"
 
 //Application Entry Point
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
@@ -159,101 +22,75 @@ D3DApp::D3DApp(HINSTANCE hInstance) :
 D3DBase(hInstance),
 mCubeVB(NULL),
 mCubeIB(NULL),
-mCubeVS(NULL),
-mCubePS(NULL),
-mPosIL(NULL),
-mPosColIL(NULL),
-mGridVB(NULL),
-mStarVB(NULL),
-mStarIB(NULL)
+mSimpleVS(NULL),
+mSimplePS(NULL),
+mPosInputLayout(NULL),
+mNormVertexInputLayout(NULL)
 {
-	mWorld = XMMatrixIdentity();
+	//Camera Init
+	mCamera.SetPosition(0.0f, 6.0f, -30.0f);
+	mCamera.Pitch(XMConvertToRadians(12.5f));
 
-	//Effects 11 - Win10.1 + June2010DXSDK + VS 2013 +  > D3D 11.1 = A very unproductive first milestone.
+	//Lights
+	XMStoreFloat4(&mGlobalAmbient, XMVectorSet(0.15f, 0.15f, 0.15f, 1.0f));
 
-	//ID3D10Blob* compiledShader = 0;
-	//ID3D10Blob* compilationMsgs = 0;
-	//HRESULT HR;
-	//HR = D3DX11CompileEffectFromFile(L"color.fx", 0, 0, D3DCOMPILE_DEBUG, 0, mD3DDevice, &mEffect, &compilationMsgs);
-	//D3DCompileFromFile(L"color.fx", 0, 0, 0, "fx_5_0", D3DCOMPILE_DEBUG, 0, &compiledShader, &compilationMsgs);
-	//D3DX11CreateEffectFromMemory(compiledShader->GetBufferPointer(), compiledShader->GetBufferSize(), 0, mD3DDevice, &mEffect);
-	//SAFE_RELEASE(compilationMsgs);
-	//D3DX11CompileEffectFromFile(L"color.fx", 0, 0, 0, 0, mD3DDevice, &mEffect, &compilationMsgs);
-	//D3DX11CompileFromFile(L"FX/color.fx", 0, 0, 0, "fx_5_0", shaderFlags,
-	//	0, 0, &compiledShader, &compilationMsgs, 0);
-	//D3DX11CreateEffectFromFile(L"color.fx", 0, mD3DDevice, &mEffect);
-
-	//mTechnique = mEffect->GetTechniqueByName("ColorTech");
-	//mfxWorldViewProj = mEffect->GetVariableByName("gWorldViewProj")->AsMatrix();
-
-	//D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
-	//{
-	//	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 2, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	//	{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
-	//};
-
-	//D3DX11_PASS_DESC passDesc;
-	//mTechnique->GetPassByIndex(0)->GetDesc(&passDesc);
-	//mD3DDevice->CreateInputLayout(vertexDesc, 2, passDesc.pIAInputSignature,
-	//	passDesc.IAInputSignatureSize, &mEffectIL);
-
-
+	//Objects World Space Init
 	XMMATRIX IdentityMX = XMMatrixIdentity();
-	XMStoreFloat4x4(&mCube, IdentityMX);
-	XMStoreFloat4x4(&mGrid, IdentityMX);
-	XMStoreFloat4x4(&mStar, IdentityMX);
+	mWorld = XMMatrixIdentity();
+	XMStoreFloat4x4(&mCube, XMMatrixTranslationFromVector(XMVectorSet(0.0f, 1.05f, 0.0f, 1.0f)));
 	XMStoreFloat4x4(&mSkyBox, IdentityMX);
+	XMStoreFloat4x4(&mQuad, IdentityMX);
+	XMStoreFloat4x4(&mStalker, IdentityMX);
 
-	cameraInWorldSpaceMX = XMMatrixIdentity();
+	//Skybox
+	mSkyBoxScalingMX = XMMatrixScaling(666.0f, 666.0f, 666.0f);
+	//Quad
+	mQuadScalingMX = XMMatrixScaling(2.0f, 2.0f, 2.0f);
+	XMStoreFloat4x4(&mQuad, mQuadScalingMX);
 
-	//Camera Initialization
-	mCamera.SetPosition(0.0f, 1.0f, -5.5f);
+	//Stalker
+	mStalkerScalingMX = XMMatrixScaling(5.0f, 5.0f, 5.0f);
+	mStalkerRotationMX = XMMatrixRotationY(XMConvertToRadians(180.0f));
+	mStalkerTranslationMX = XMMatrixTranslation(-3.0f, 0.0f, 0.0f);
+	mStalkerTransformationMX = XMMatrixMultiply(mStalkerScalingMX, XMMatrixMultiply(mStalkerRotationMX, mStalkerTranslationMX));
+	XMStoreFloat4x4(&mStalker, mStalkerTransformationMX);
 
-	//Grid's Initial Transformation
-	XMMATRIX GridTransformMX = XMMatrixIdentity();
-	XMMATRIX GridScalingMX = XMMatrixScaling(30.0f, 1.0f, 30.0f);
-	XMMATRIX GridTranslationMX = XMMatrixTranslation(0.0f, -1.0f, 0.0f);
-	GridTransformMX = XMMatrixMultiply(GridScalingMX, GridTranslationMX);
-	XMStoreFloat4x4(&mGrid, GridTransformMX);
-
-	//Star's Initial Transformation
-	XMMATRIX StarTransformMX = XMMatrixIdentity();
-	XMMATRIX StarScalingMX = XMMatrixScaling(0.15f, 0.15f, 0.15f);
-	XMMATRIX StarTranslationMX = XMMatrixTranslation(0.0f, 3.0f, 0.0f);
-	StarTransformMX = XMMatrixMultiply(StarScalingMX, StarTranslationMX);
-	XMStoreFloat4x4(&mStar, StarTransformMX);
-
-	//SkyBox Initialization
-	mSkyBoxFileName = L"trippySkybox.dds";
+	//Shader Info CB
+	XMStoreFloat4(&shaderInfoDataBlock1, XMVectorZero());
+	XMStoreFloat4(&shaderInfoDataBlock2, XMVectorZero());
+	XMStoreFloat4(&shaderInfoDataBlock3, XMVectorZero());
+	XMStoreFloat4(&shaderInfoDataBlock4, XMVectorZero());
 }
 
 D3DApp::~D3DApp()
 {
+	SAFE_RELEASE(mPosInputLayout);
+	SAFE_RELEASE(mPosColInputLayout);
+	SAFE_RELEASE(mNormVertexInputLayout);
+	SAFE_RELEASE(mFullVertexInputLayout);
+	SAFE_RELEASE(mSimpleVS);
+	SAFE_RELEASE(mSimplePS);
+	SAFE_RELEASE(mWireFrameRasterState);
+	SAFE_RELEASE(mNoCullRasterState);
+	SAFE_RELEASE(mDefaultRasterState);
+	SAFE_RELEASE(mAlphaToCoverageBlendState);
+	SAFE_RELEASE(mTransparentBlendState);
+	SAFE_RELEASE(mOpaqueBlendState);
+	SAFE_RELEASE(mLinearSamplerState);
+	SAFE_RELEASE(mLessEqualDSS);
 	SAFE_RELEASE(mCubeVB);
 	SAFE_RELEASE(mCubeIB);
-	SAFE_RELEASE(mCubeVS);
-	SAFE_RELEASE(mCubePS);
-	SAFE_RELEASE(mPosIL);
-	SAFE_RELEASE(mPerObjWVP);
-
-	SAFE_RELEASE(mGridVB);
-	SAFE_RELEASE(mPerObjWVPGrid);
-
-	SAFE_RELEASE(mStarVB);
-	SAFE_RELEASE(mStarIB);
-	SAFE_RELEASE(mPerObjWVPStar);
-
-	SAFE_RELEASE(mSkyBoxVB);
-	SAFE_RELEASE(mSkyBoxIB);
+	SAFE_RELEASE(mTSkyBoxVB);
+	SAFE_RELEASE(mTSkyBoxIB);
 	SAFE_RELEASE(mSkyBoxVS);
 	SAFE_RELEASE(mSkyBoxPS);
-	SAFE_RELEASE(mCubeMapSRV);
-	SAFE_RELEASE(mPerObjWVPSkyBox);
+	SAFE_RELEASE(mQuadVB);
+	SAFE_RELEASE(mQuadIB);
+	SAFE_RELEASE(mQuadSRV);
+	SAFE_RELEASE(mTextureLightVS);
+	SAFE_RELEASE(mTextureLightPS);
 
-	SAFE_RELEASE(mNoCullingRS);
-	SAFE_RELEASE(mLessEqualDSS);
-	SAFE_RELEASE(mLinearSSO);
-	SAFE_RELEASE(mPosColIL);
+
 }
 
 bool D3DApp::Init()
@@ -274,202 +111,155 @@ bool D3DApp::Init()
 void D3DApp::ResizeWindow()
 {
 	D3DBase::ResizeWindow();
-	mCamera.SetFrustum(XM_PIDIV2, AspectRatio(), 0.5f, 1000.0f);
+	mCamera.SetFrustum(XM_PIDIV4, AspectRatio(), 0.5f, 1000.f);
 }
 
 void D3DApp::Update(float deltaTime)
 {
-
-	////User Input
-	//Camera
-	if (GetAsyncKeyState('W') & 0x8000)
-	{
-		mCamera.Step(deltaTime);
-	}
-
-	if (GetAsyncKeyState('S') & 0x8000)
-	{
-		mCamera.Step(-deltaTime);
-	}
-
-	if (GetAsyncKeyState('A') & 0x8000)
-	{
-		mCamera.Strafe(-deltaTime);
-	}
-
-	if (GetAsyncKeyState('D') & 0x8000)
-	{
-		mCamera.Strafe(deltaTime);
-	}
-
-	if (GetAsyncKeyState(VK_SPACE) & 0x8000)
-	{
-		mCamera.VFly(deltaTime);
-	}
-
-	if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
-	{
-		mCamera.VFly(-deltaTime);
-	}
-
-	mCamera.UpdateViewMatrix();
-	XMMATRIX viewProj = mCamera.GetViewProj();
-	
-	////Object Updates
-	//Cube
-	mWorld = XMLoadFloat4x4(&mCube);
-	XMMATRIX WVP = XMMatrixMultiply(mWorld, viewProj);
-	XMStoreFloat4x4(&mObjCB.WVP, WVP);
-	D3D11_MAPPED_SUBRESOURCE cbSR;
-	ZeroMemory(&cbSR, sizeof(cbSR));
-	mD3DDeviceContext->Map(mPerObjWVP, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbSR);
-	memcpy(cbSR.pData, &mObjCB, sizeof(cbPerObject));
-	mD3DDeviceContext->Unmap(mPerObjWVP, 0);
-
-	//Grid
-	mWorld = XMLoadFloat4x4(&mGrid);
-	XMMATRIX WVP2 = XMMatrixMultiply(mWorld, viewProj);
-	XMStoreFloat4x4(&mObjCBGrid.WVP, WVP2);
-	ZeroMemory(&cbSR, sizeof(cbSR));
-	mD3DDeviceContext->Map(mPerObjWVPGrid, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbSR);
-	memcpy(cbSR.pData, &mObjCBGrid, sizeof(cbPerObject));
-	mD3DDeviceContext->Unmap(mPerObjWVPGrid, 0);
-
-	//Star
-	mStarRotationMX = XMMatrixRotationY(GetAngle(deltaTime));
-	mWorld = XMMatrixMultiply(mStarRotationMX, XMLoadFloat4x4(&mStar));
-	XMMATRIX WVP3 = XMMatrixMultiply(mWorld, viewProj);
-	XMStoreFloat4x4(&mObjCBStar.WVP, WVP3);
-	ZeroMemory(&cbSR, sizeof(cbSR));
-	mD3DDeviceContext->Map(mPerObjWVPStar, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbSR);
-	memcpy(cbSR.pData, &mObjCBStar, sizeof(cbPerObject));
-	mD3DDeviceContext->Unmap(mPerObjWVPStar, 0);
-
-	//SkyBox
-	XMVECTOR skyBoxPos = mCamera.GetPositionXM();
-	XMMATRIX SkyBoxTranslationMX = XMMatrixTranslation(XMVectorGetX(skyBoxPos), XMVectorGetY(skyBoxPos), XMVectorGetZ(skyBoxPos));
-	XMStoreFloat4x4(&mSkyBox, SkyBoxTranslationMX);
-	mWorld = XMLoadFloat4x4(&mSkyBox);
-	XMMATRIX WVP4 = XMMatrixMultiply(mWorld, viewProj);
-	XMStoreFloat4x4(&mObjCBSkyBox.WVP, WVP4);
-	D3D11_MAPPED_SUBRESOURCE cbSBSR;
-	ZeroMemory(&cbSBSR, sizeof(cbSBSR));
-	mD3DDeviceContext->Map(mPerObjWVPSkyBox, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbSBSR);
-	memcpy(cbSBSR.pData, &mObjCBSkyBox, sizeof(cbPerObject));
-	mD3DDeviceContext->Unmap(mPerObjWVPSkyBox, 0);
+	GetUserInput(deltaTime);
+	UpdateCamera(deltaTime);
+	UpdateSkybox(deltaTime);
+	UpdateLights(deltaTime);
 }
 
 void D3DApp::Draw()
 {	
-	assert(mD3DDevice);
-	assert(mD3DDeviceContext);
 	float mClearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	mD3DDeviceContext->ClearRenderTargetView(mRenderTargetView, mClearColor);
 	mD3DDeviceContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
+	cbMiscInfo ShaderMiscCB;
+	ShaderMiscCB.dataBlock1 = shaderInfoDataBlock1;
+	ShaderMiscCB.dataBlock2 = shaderInfoDataBlock2;
+	ShaderMiscCB.dataBlock3 = shaderInfoDataBlock3;
+	ShaderMiscCB.dataBlock4 = shaderInfoDataBlock4;
 
-	////Effects11
-	//mD3DDeviceContext->IASetInputLayout(mEffectIL);
-	//mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//UINT effectStride = sizeof(PosColVertex);
-	//UINT effectOffset = 0;
-
-	//mD3DDeviceContext->IASetVertexBuffers(2, 1, &mEffectVB, &effectStride, &effectOffset);
-	//mD3DDeviceContext->IASetIndexBuffer(mEffectIB, DXGI_FORMAT_R32_UINT, 0);
-
-	////Consts
-	//XMMATRIX world = mEffectWorld;
-	//XMMATRIX view = mCamera.GetView();
-	//XMMATRIX proj = mCamera.GetProj();
-	//XMMATRIX worldViewProj = world*view*proj;
-	//mfxWorldViewProj->SetMatrix(reinterpret_cast<float*>(&worldViewProj));
-
-	//D3DX11_TECHNIQUE_DESC techDesc;
-	//mTechnique->GetDesc(&techDesc);
-	//for (UINT pass = 0; techDesc.Passes; ++pass)
-	//{
-	//	mTechnique->GetPassByIndex(0)->Apply(0, mD3DDeviceContext);
-
-	//	mD3DDeviceContext->DrawIndexed(36, 0, 0);
-	//}
-	////End Effects11
-
-
-	//Cube's Render Options
+	//Cube
 	UINT stride = sizeof(PosColVertex);
 	UINT offset = 0;
-	mD3DDeviceContext->IASetInputLayout(mPosColIL);
+	mD3DDeviceContext->IASetInputLayout(mPosColInputLayout);
 	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	mD3DDeviceContext->IASetVertexBuffers(1, 1, &mCubeVB, &stride, &offset);
-	mD3DDeviceContext->IASetIndexBuffer(mCubeIB, DXGI_FORMAT_R32_UINT, NULL);
-	mD3DDeviceContext->VSSetConstantBuffers(1, 1, &mPerObjWVP);
-	mD3DDeviceContext->VSSetShader(mCubeVS, NULL, 0);
-	mD3DDeviceContext->PSSetShader(mCubePS, NULL, 0);
+	mD3DDeviceContext->IASetVertexBuffers(0, 1, &mCubeVB, &stride, &offset);
+	mD3DDeviceContext->IASetIndexBuffer(mCubeIB, DXGI_FORMAT_R32_UINT, 0);
+	mD3DDeviceContext->VSSetShader(mSimpleVS, NULL, 0);
+	mD3DDeviceContext->PSSetShader(mSimplePS, NULL, 0);
+	mWorld = XMLoadFloat4x4(&mCube);
+	mWorldViewProj = XMMatrixMultiply(mWorld, mViewProj);
+	cbPerObjectTransformation mPerObjectCB;
+	XMStoreFloat4x4(&mPerObjectCB.mWorldViewProj, mWorldViewProj);
+	mObjectConstBuffer.Data = mPerObjectCB;
+	mObjectConstBuffer.ApplyChanges(mD3DDeviceContext);
+	auto cBuffer = mObjectConstBuffer.Buffer();
+	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBuffer);
+	mD3DDeviceContext->RSSetState(mDefaultRasterState);
 	mD3DDeviceContext->DrawIndexed(cubeInfo.ibCount, 0, 0);
 
-	//Grid's Render Options
-	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-	mD3DDeviceContext->IASetVertexBuffers(1, 1, &mGridVB, &stride, &offset);
-	mD3DDeviceContext->VSSetConstantBuffers(1, 1, &mPerObjWVPGrid);
-	mD3DDeviceContext->Draw(gridInfo.vbCount, 0);
-
-	//Star's Render Options
-	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	mD3DDeviceContext->IASetVertexBuffers(1, 1, &mStarVB, &stride, &offset);
-	mD3DDeviceContext->IASetIndexBuffer(mStarIB, DXGI_FORMAT_R32_UINT, NULL);
-	mD3DDeviceContext->VSSetConstantBuffers(1, 1, &mPerObjWVPStar);
-	mD3DDeviceContext->DrawIndexed(starInfo.ibCount, 0, 0);
-
-	//SkyBox's Render Options
+	//SkyBox
 	UINT strideSB = sizeof(PosVertex);
-	mD3DDeviceContext->IASetInputLayout(mPosIL);
+	UINT offsetSB = 0;
+	mD3DDeviceContext->IASetInputLayout(mPosInputLayout);
 	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	mD3DDeviceContext->IASetVertexBuffers(0, 1, &mSkyBoxVB, &strideSB, &offset);
-	mD3DDeviceContext->IASetIndexBuffer(mSkyBoxIB, DXGI_FORMAT_R32_UINT, NULL);
+	mD3DDeviceContext->IASetVertexBuffers(1, 1, &mTSkyBoxVB, &strideSB, &offsetSB);
+	mD3DDeviceContext->IASetIndexBuffer(mTSkyBoxIB, DXGI_FORMAT_R32_UINT, 0);
 	mD3DDeviceContext->VSSetShader(mSkyBoxVS, NULL, 0);
 	mD3DDeviceContext->PSSetShader(mSkyBoxPS, NULL, 0);
-	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &mPerObjWVPSkyBox);
-	mD3DDeviceContext->PSSetShaderResources(0, 1, &mCubeMapSRV);
-	mD3DDeviceContext->PSSetSamplers(0, 1, &mLinearSSO);
-	mD3DDeviceContext->RSSetState(mNoCullingRS);
+	mWorld = XMLoadFloat4x4(&mSkyBox);
+	mWorldViewProj = XMMatrixMultiply(mWorld, mViewProj);
+	cbPerObjectTransformation mPerObjectCBTSB;
+	XMStoreFloat4x4(&mPerObjectCBTSB.mWorldViewProj, mWorldViewProj);
+	XMStoreFloat4x4(&mPerObjectCBTSB.mWorldMatrix, mWorld);
+	mObjectConstBufferTSB.Data = mPerObjectCBTSB;
+	mObjectConstBufferTSB.ApplyChanges(mD3DDeviceContext);
+	auto cBufferTSB = mObjectConstBufferTSB.Buffer();
+	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBufferTSB);
+	mD3DDeviceContext->PSSetSamplers(0, 1, &mLinearSamplerState);
+	mD3DDeviceContext->PSSetShaderResources(0, 1, &mTrippySkyBoxSRV);
+	mD3DDeviceContext->RSSetState(mNoCullRasterState);
 	mD3DDeviceContext->OMSetDepthStencilState(mLessEqualDSS, 0);
-	//mD3DDeviceContext->DrawIndexed(skyBoxInfo.ibCount, 0, 0);
-
-	//Reset Render Options to Default
-	mD3DDeviceContext->RSSetState(NULL);
+	mD3DDeviceContext->DrawIndexed(skyBoxInfo.ibCount, 0, 0);
+	mD3DDeviceContext->VSSetShader(mSimpleVS, NULL, NULL);
+	mD3DDeviceContext->RSSetState(mDefaultRasterState);
 	mD3DDeviceContext->OMSetDepthStencilState(NULL, 0);
+
+	//TestQuad
+	UINT strideQuad = sizeof(FullVertex);
+	UINT offsetQuad = 0;
+	mD3DDeviceContext->IASetInputLayout(mFullVertexInputLayout);
+	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	mD3DDeviceContext->IASetVertexBuffers(6, 1, &mQuadVB, &strideQuad, &offsetQuad);
+	mD3DDeviceContext->IASetIndexBuffer(mQuadIB, DXGI_FORMAT_R32_UINT, 0);
+	mD3DDeviceContext->VSSetShader(mTextureLightVS, NULL, 0);
+	mD3DDeviceContext->PSSetShader(mTextureLightPS, NULL, 0);
+	mWorld = XMLoadFloat4x4(&mQuad);
+	mWorldViewProj = XMMatrixMultiply(mWorld, mViewProj);
+	cbPerObjectTransformation mPerObjectCBQD;
+	XMStoreFloat4x4(&mPerObjectCBQD.mWorldViewProj, mWorldViewProj);
+	XMStoreFloat4x4(&mPerObjectCBQD.mWorldMatrix, mWorld);
+	mObjectConstBufferQuad.Data = mPerObjectCBQD;
+	mObjectConstBufferQuad.ApplyChanges(mD3DDeviceContext);
+	auto cBufferQD = mObjectConstBufferQuad.Buffer();
+	ShaderMiscCB.dataBlock1.x = mUVCatQuadScalar;
+	mShaderConstantBufferInfo.Data = ShaderMiscCB;
+	mShaderConstantBufferInfo.ApplyChanges(mD3DDeviceContext);
+	auto cBufferShaderMiscInfo = mShaderConstantBufferInfo.Buffer();
+	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBufferQD);
+	mD3DDeviceContext->PSSetConstantBuffers(2, 1, &cBufferShaderMiscInfo);
+	mD3DDeviceContext->PSSetSamplers(0, 1, &mLinearSamplerState);
+	mD3DDeviceContext->PSSetShaderResources(0, 1, &mQuadSRV);
+	mD3DDeviceContext->RSSetState(mNoCullRasterState);
+	mD3DDeviceContext->DrawIndexed(mQuadMesh.mIndices.size(), 0, 0);
+
+	//DirLight
+	mDirectionalLightInfo.ApplyChanges(mD3DDeviceContext);
+	auto cBufferDirLight1 = mDirectionalLightInfo.Buffer();
+	mD3DDeviceContext->PSSetConstantBuffers(0, 1, &cBufferDirLight1);
+
+	//PointLight
+	mPointLightInfo.ApplyChanges(mD3DDeviceContext);
+	auto cBufferPointLight1 = mPointLightInfo.Buffer();
+	mD3DDeviceContext->PSSetConstantBuffers(1, 1, &cBufferPointLight1);
+
+	//Stalker Model
+	UINT strideStalker = sizeof(FullVertex);
+	UINT offsetStalker = 0;
+	mD3DDeviceContext->IASetInputLayout(mFullVertexInputLayout);
+	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	mD3DDeviceContext->IASetVertexBuffers(6, 1, &mStalkerVB, &strideStalker, &offsetStalker);
+	mD3DDeviceContext->IASetIndexBuffer(mStalkerIB, DXGI_FORMAT_R32_UINT, 0);
+	mD3DDeviceContext->VSSetShader(mTextureLightVS, NULL, 0);
+	mD3DDeviceContext->PSSetShader(mTextureLightPS, NULL, 0);
+	mWorld = XMLoadFloat4x4(&mStalker);
+	mWorldViewProj = XMMatrixMultiply(mWorld, mViewProj);
+	cbPerObjectTransformation mPerObjectCBStalker;
+	XMStoreFloat4x4(&mPerObjectCBStalker.mWorldViewProj, mWorldViewProj);
+	XMStoreFloat4x4(&mPerObjectCBStalker.mWorldMatrix, mWorld);
+	mObjectConstBufferStalker.Data = mPerObjectCBStalker;
+	mObjectConstBufferStalker.ApplyChanges(mD3DDeviceContext);
+	auto cBufferStalker = mObjectConstBufferStalker.Buffer();
+	ShaderMiscCB.dataBlock1.x = mUVDefaultScalar;
+	mShaderConstantBufferInfo.Data = ShaderMiscCB;
+	mShaderConstantBufferInfo.ApplyChanges(mD3DDeviceContext);
+	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBufferStalker);
+	mD3DDeviceContext->PSSetConstantBuffers(2, 1, &cBufferShaderMiscInfo);
+	mD3DDeviceContext->PSSetSamplers(0, 1, &mLinearSamplerState);
+	mD3DDeviceContext->PSSetShaderResources(0, 1, &mStalkerSRV);
+	mD3DDeviceContext->RSSetState(mDefaultRasterState);
+	mD3DDeviceContext->DrawIndexed(mStalkerMesh.mIndices.size(), 0, 0);
+
+	//Trees Instancing
+//	mD3DDeviceContext->DrawInstanced(treeInstanceBufferInfo, instanceCount, 0, 0)
+
+
+
+
+
 
 	mSwapChain->Present(0, 0);
 }
 
-//Might concatenate buffers once this gets out of hand.
+
 void D3DApp::BuildGeometryAndBuffers()
 {
-	////Effect Cube
-	//GeoFactory.GenerateCube(effectCubeInfo);
-	//D3D11_BUFFER_DESC vbdeffect;
-	//ZeroMemory(&vbdeffect, sizeof(vbdeffect));
-	//vbdeffect.Usage = D3D11_USAGE_IMMUTABLE;
-	//vbdeffect.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	//vbdeffect.ByteWidth = effectCubeInfo.vbSize;
-
-	//D3D11_SUBRESOURCE_DATA vbideffect;
-	//ZeroMemory(&vbideffect, sizeof(vbideffect));
-	//vbideffect.pSysMem = &effectCubeInfo.Vertices[0];
-	//mD3DDevice->CreateBuffer(&vbdeffect, &vbideffect, &mEffectVB);
-
-	//D3D11_BUFFER_DESC ibdeffect;
-	//ZeroMemory(&ibdeffect, sizeof(ibdeffect));
-	//ibdeffect.Usage = D3D11_USAGE_IMMUTABLE;
-	//ibdeffect.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	//ibdeffect.ByteWidth = effectCubeInfo.ibSize;
-
-	//D3D11_SUBRESOURCE_DATA ibideffect;
-	//ZeroMemory(&ibideffect, sizeof(ibideffect));
-	//ibideffect.pSysMem = &effectCubeInfo.Indices[0];
-	//mD3DDevice->CreateBuffer(&ibdeffect, &ibideffect, &mEffectIB);
-
-
 	//Cube
 	GeoFactory.GenerateCube(cubeInfo);
 	D3D11_BUFFER_DESC vbd;
@@ -494,109 +284,84 @@ void D3DApp::BuildGeometryAndBuffers()
 	ibid.pSysMem = &cubeInfo.Indices[0];
 	mD3DDevice->CreateBuffer(&ibd, &ibid, &mCubeIB);
 
-	D3D11_BUFFER_DESC cbd;
-	ZeroMemory(&cbd, sizeof(cbd));
-	cbd.Usage = D3D11_USAGE_DYNAMIC;
-	cbd.ByteWidth = sizeof(cbPerObject);
-	cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	mD3DDevice->CreateBuffer(&cbd, NULL, &mPerObjWVP);
-
-	//Grid
-	GeoFactory.GenerateGrid(gridInfo);
-	ZeroMemory(&vbd, sizeof(vbd));
-	vbd.Usage = D3D11_USAGE_IMMUTABLE;
-	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vbd.ByteWidth = gridInfo.vbSize;
-
-	ZeroMemory(&vbid, sizeof(vbid));
-	vbid.pSysMem = &gridInfo.Vertices[0];
-	mD3DDevice->CreateBuffer(&vbd, &vbid, &mGridVB);
-	mD3DDevice->CreateBuffer(&cbd, NULL, &mPerObjWVPGrid);
-
-	//Star
-	GeoFactory.GenerateStar(starInfo);
-	ZeroMemory(&vbd, sizeof(vbd));
-	vbd.Usage = D3D11_USAGE_IMMUTABLE;
-	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vbd.ByteWidth = starInfo.vbSize;
-
-	ZeroMemory(&vbid, sizeof(vbid));
-	vbid.pSysMem = &starInfo.Vertices[0];
-	mD3DDevice->CreateBuffer(&vbd, &vbid, &mStarVB);
-
-	ZeroMemory(&ibd, sizeof(ibd));
-	ibd.Usage = D3D11_USAGE_IMMUTABLE;
-	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	ibd.ByteWidth = starInfo.ibSize;
-
-	ZeroMemory(&ibid, sizeof(ibid));
-	ibid.pSysMem = &starInfo.Indices[0];
-	mD3DDevice->CreateBuffer(&ibd, &ibid, &mStarIB);
-	mD3DDevice->CreateBuffer(&cbd, NULL, &mPerObjWVPStar);
+	mObjectConstBuffer.Initialize(mD3DDevice);
 
 	//SkyBox
-	GeoFactory.GenerateSkyBox(skyBoxInfo);
-	CreateDDSTextureFromFile(mD3DDevice, mSkyBoxFileName, NULL, &mCubeMapSRV);
+	BuildSkyBox(mSkyBoxFileName);
 
-	ZeroMemory(&vbd, sizeof(vbd));
-	vbd.Usage = D3D11_USAGE_IMMUTABLE;
-	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vbd.ByteWidth = skyBoxInfo.vbSize;
+	//Quad
+	GeoFactory.GenerateModel(mQuadMesh, mQuadFileName);
+	CreateDDSTextureFromFile(mD3DDevice, mQuadTextureFileName, NULL, &mQuadSRV);
+	GeoFactory.GenerateModelBuffers(mD3DDevice, mQuadMesh, &mQuadVB, &mQuadIB);
+	mObjectConstBufferQuad.Initialize(mD3DDevice);
 
-	ZeroMemory(&vbid, sizeof(vbid));
-	vbid.pSysMem = &skyBoxInfo.Vertices[0];
-	mD3DDevice->CreateBuffer(&vbd, &vbid, &mSkyBoxVB);
+	//Lights
+	//Dir Light 1
+	mDirectionalLightInfo.Initialize(mD3DDevice);
+	//Point Light 1
+	mPointLightInfo.Initialize(mD3DDevice);
 
-	ZeroMemory(&ibd, sizeof(ibd));
-	ibd.Usage = D3D11_USAGE_IMMUTABLE;
-	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	ibd.ByteWidth = skyBoxInfo.ibSize;
+	//Stalker
+	GeoFactory.GenerateModel(mStalkerMesh, mStalkerFileName, true, false);
+	CreateDDSTextureFromFile(mD3DDevice, mStalkerTextureFileName, NULL, &mStalkerSRV);
+	GeoFactory.GenerateModelBuffers(mD3DDevice, mStalkerMesh, &mStalkerVB, &mStalkerIB);
+	mObjectConstBufferStalker.Initialize(mD3DDevice);
 
-	ZeroMemory(&ibid, sizeof(ibid));
-	ibid.pSysMem = &skyBoxInfo.Indices[0];
-	mD3DDevice->CreateBuffer(&ibd, &ibid, &mSkyBoxIB);
-
-	ZeroMemory(&cbd, sizeof(cbd));
-	cbd.Usage = D3D11_USAGE_DYNAMIC;
-	cbd.ByteWidth = sizeof(cbPerObject);
-	cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	mD3DDevice->CreateBuffer(&cbd, NULL, &mPerObjWVPSkyBox);
-
+	//SHADER MISC INFO
+	mShaderConstantBufferInfo.Initialize(mD3DDevice);
 }
 
 void D3DApp::CompileShaders()
 {
-	mD3DDevice->CreateVertexShader(VertexShader, sizeof(VertexShader), NULL, &mCubeVS);
-	mD3DDevice->CreatePixelShader(PixelShader, sizeof(PixelShader), NULL, &mCubePS);
+	mD3DDevice->CreateVertexShader(BasicVertexShader, sizeof(BasicVertexShader), NULL, &mSimpleVS);
+	mD3DDevice->CreatePixelShader(BasicPixelShader, sizeof(BasicPixelShader), NULL, &mSimplePS);
 	mD3DDevice->CreateVertexShader(SkyBoxVertexShader, sizeof(SkyBoxVertexShader), NULL, &mSkyBoxVS);
 	mD3DDevice->CreatePixelShader(SkyBoxPixelShader, sizeof(SkyBoxPixelShader), NULL, &mSkyBoxPS);
-
+	mD3DDevice->CreateVertexShader(TextureLightingVS, sizeof(TextureLightingVS), NULL, &mTextureLightVS);
+	mD3DDevice->CreatePixelShader(TextureLightingPS, sizeof(TextureLightingPS), NULL, &mTextureLightPS);
 }
 
 void D3DApp::DefineInputLayouts()
 {
 	D3D11_INPUT_ELEMENT_DESC posVertexDesc[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
-	mD3DDevice->CreateInputLayout(posVertexDesc, ARRAYSIZE(posVertexDesc), SkyBoxVertexShader, sizeof(SkyBoxVertexShader), &mPosIL);
+	mD3DDevice->CreateInputLayout(posVertexDesc, ARRAYSIZE(posVertexDesc), SkyBoxVertexShader, sizeof(SkyBoxVertexShader), &mPosInputLayout);
 
 	D3D11_INPUT_ELEMENT_DESC posColVertexDesc[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
-	mD3DDevice->CreateInputLayout(posColVertexDesc, ARRAYSIZE(posColVertexDesc), VertexShader, sizeof(VertexShader), &mPosColIL);
+	mD3DDevice->CreateInputLayout(posColVertexDesc, ARRAYSIZE(posColVertexDesc), BasicVertexShader, sizeof(BasicVertexShader), &mPosColInputLayout);
 
-	/*D3D11_INPUT_ELEMENT_DESC normalVertexDesc[] = 
+	//Not In Use ATM
+	D3D11_INPUT_ELEMENT_DESC normalVertexDesc[] = 
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
-	mD3DDevice->CreateInputLayout(normalVertexDesc, ARRAYSIZE(normalVertexDesc), SkyBoxVertexShader, sizeof(SkyBoxVertexShader), &mPosColIL);*/
+	//mD3DDevice->CreateInputLayout(normalVertexDesc, ARRAYSIZE(normalVertexDesc), SkyBoxVertexShader, sizeof(SkyBoxVertexShader), &mPosColIL);
+
+	D3D11_INPUT_ELEMENT_DESC fullVertexDesc[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 6, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 6, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TANGENT",  0, DXGI_FORMAT_R32G32B32_FLOAT, 6, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    6, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	};
+	mD3DDevice->CreateInputLayout(fullVertexDesc, ARRAYSIZE(fullVertexDesc), TextureLightingVS, sizeof(TextureLightingVS), &mFullVertexInputLayout);
+
+	D3D11_INPUT_ELEMENT_DESC geometryBufferDesc[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 6, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 6, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 6, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 6, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	};
+//	mD3DDevice->CreateInputLayout(geometryBufferDesc, ARRAYSIZE(geometryBufferDesc), SimpleGS, sizeof(SimpleGS), &mFullVertexInputLayout);
 }
 
 void D3DApp::BuildStateConfigurations()
@@ -607,18 +372,64 @@ void D3DApp::BuildStateConfigurations()
 	sd.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	sd.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	sd.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	mD3DDevice->CreateSamplerState(&sd, &mLinearSSO);
+	mD3DDevice->CreateSamplerState(&sd, &mLinearSamplerState);
 
-	D3D11_RASTERIZER_DESC rd;
-	ZeroMemory(&rd, sizeof(rd));
-	rd.FillMode = D3D11_FILL_SOLID;
-	rd.CullMode = D3D11_CULL_NONE;
-	mD3DDevice->CreateRasterizerState(&rd, &mNoCullingRS);
+	D3D11_RASTERIZER_DESC rs;
+	ZeroMemory(&rs, sizeof(rs));
+	rs.FillMode = D3D11_FILL_SOLID;
+	rs.CullMode = D3D11_CULL_BACK;
+	rs.AntialiasedLineEnable = rs.DepthClipEnable = true;
+	mDefaultRasterState = NULL;
+	mD3DDevice->CreateRasterizerState(&rs, &mDefaultRasterState);
+
+	
+	D3D11_RASTERIZER_DESC rs1;
+	ZeroMemory(&rs1, sizeof(rs1));
+	rs1.FillMode = D3D11_FILL_SOLID;
+	rs1.CullMode = D3D11_CULL_NONE;
+	mNoCullRasterState = NULL;
+	mD3DDevice->CreateRasterizerState(&rs1, &mNoCullRasterState);
 
 	D3D11_DEPTH_STENCIL_DESC dsd;
 	ZeroMemory(&dsd, sizeof(dsd));
+	dsd.DepthEnable = true;
+	dsd.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 	dsd.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+	mLessEqualDSS = NULL;
 	mD3DDevice->CreateDepthStencilState(&dsd, &mLessEqualDSS);
+
+	D3D11_RASTERIZER_DESC wfd;
+	ZeroMemory(&wfd, sizeof(wfd));
+	wfd.FillMode = D3D11_FILL_WIREFRAME;
+	wfd.CullMode = D3D11_CULL_BACK;
+	wfd.FrontCounterClockwise = false;
+	wfd.DepthClipEnable = true;
+	mD3DDevice->CreateRasterizerState(&wfd, &mWireFrameRasterState);
+
+	D3D11_BLEND_DESC aTcd;
+	ZeroMemory(&aTcd, sizeof(aTcd));
+	aTcd.AlphaToCoverageEnable = true;
+	aTcd.IndependentBlendEnable = false;
+	aTcd.RenderTarget[0].BlendEnable = false;
+	aTcd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	mD3DDevice->CreateBlendState(&aTcd, &mAlphaToCoverageBlendState);
+
+	D3D11_BLEND_DESC opbd;
+	ZeroMemory(&opbd, sizeof(opbd));
+	mD3DDevice->CreateBlendState(&opbd, &mOpaqueBlendState);
+
+	D3D11_BLEND_DESC tspd;
+	tspd.AlphaToCoverageEnable = false;
+	tspd.IndependentBlendEnable = false;
+	tspd.RenderTarget[0].BlendEnable = true;
+	tspd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	tspd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	tspd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	tspd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	tspd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	tspd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	tspd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	mD3DDevice->CreateBlendState(&tspd, &mTransparentBlendState);
 }
 
 void D3DApp::OnMouseDown(WPARAM theButton, int x, int y)
@@ -626,7 +437,6 @@ void D3DApp::OnMouseDown(WPARAM theButton, int x, int y)
 	mPrevMousePos.x = x;
 	mPrevMousePos.y = y;
 	
-	//All your input are belong to us
 	SetCapture(mMainWnd);
 }
 
@@ -637,35 +447,139 @@ void D3DApp::OnMouseUp(WPARAM theButton, int x, int y)
 
 void D3DApp::OnMouseMove(WPARAM theButton, int x, int y)
 {
-#if 0
-	//Chaining Rotation Matrices Method
-	////LMB - Look Left & Right
-	//if (theButton & MK_LBUTTON)
-	//{
-	//	float currYRotationAngle = XMConvertToRadians(-0.05f * static_cast<float>(x - mPrevMousePos.x));
-	//	mCamera.RotateY(currYRotationAngle);
-	//	
-	//}
-	//mPrevMousePos.x = x;
-	//
-	//
-	////RMB - Look Up & Down
-	//if (theButton & MK_RBUTTON)
-	//{
-	//	float currXRotationAngle = XMConvertToRadians(-0.05f * static_cast<float>(y - mPrevMousePos.y));
-	//	mCamera.Pitch(currXRotationAngle);
-	//}
-	//mPrevMousePos.y = y;
-#endif
-
-	//Rotation Matrices emulated via Quaternion
 	if (theButton & MK_LBUTTON)
 	{
-		mCamera.mReverseMult = true;
-		float currYRotAngle = XMConvertToRadians(-0.05f * static_cast<float>(x - mPrevMousePos.x));
-		float currXRotAngle = XMConvertToRadians(-0.05f * static_cast<float>(y - mPrevMousePos.y));
-		mCamera.Look(currXRotAngle, currYRotAngle, 0.0f);
+		float currYRotAngle = XMConvertToRadians(-0.25f * static_cast<float>(x - mPrevMousePos.x));
+		float currXRotAngle = XMConvertToRadians(-0.25f * static_cast<float>(y - mPrevMousePos.y));
+		mCamera.Pitch(-currXRotAngle);
+		mCamera.RotateY(-currYRotAngle);
 	}
 	mPrevMousePos.x = x;
 	mPrevMousePos.y = y;
+}
+
+float D3DApp::GetAngle(float deltaTime)
+{
+	deltaTime = deltaTime * speedScalar;
+	angle += deltaTime;
+	return angle;
+}
+
+void D3DApp::GetUserInput(float deltaTime)
+{
+	if (GetAsyncKeyState('W') & 0x8000)
+	{
+		mCamera.Step(mCamScalar * deltaTime);
+	}
+	if (GetAsyncKeyState('S') & 0x8000)
+	{
+		mCamera.Step(-mCamScalar  * deltaTime);
+	}
+	if (GetAsyncKeyState('A') & 0x8000)
+	{
+		mCamera.Strafe(-mCamScalar * deltaTime);
+	}
+	if (GetAsyncKeyState('D') & 0x8000)
+	{
+		mCamera.Strafe(mCamScalar * deltaTime);
+	}
+	if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+	{
+		mCamera.VFly(mCamScalar *deltaTime);
+	}
+	if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
+	{
+		mCamera.VFly(-mCamScalar * deltaTime);
+	}
+	if (GetAsyncKeyState(VK_ESCAPE) & 0x8000)
+	{
+		MsgProc(mMainWnd, WM_DESTROY, NULL, NULL);
+	}
+	if (GetAsyncKeyState(VK_NUMPAD8) && 0x8000)
+	{
+		mCurrPointLightZ += (mPointLightScalar * deltaTime);
+	}
+	if (GetAsyncKeyState(VK_NUMPAD5) && 0x8000)
+	{
+		mCurrPointLightZ += (-mPointLightScalar * deltaTime);
+	}
+	if (GetAsyncKeyState(VK_NUMPAD4) && 0x8000)
+	{
+		mCurrPointLightX += (-mPointLightScalar * deltaTime);
+	}
+	if (GetAsyncKeyState(VK_NUMPAD6) && 0x8000)
+	{
+		mCurrPointLightX += (mPointLightScalar * deltaTime);
+	}
+	if (GetAsyncKeyState(VK_NUMPAD7) && 0x8000)
+	{
+		mCurrPointLightY += (-mPointLightScalar * deltaTime);
+	}
+	if (GetAsyncKeyState(VK_NUMPAD9) && 0x8000)
+	{
+		mCurrPointLightY += (mPointLightScalar * deltaTime);
+	}
+
+}
+
+void D3DApp::UpdateCamera(float deltaTime)
+{
+	mCamera.UpdateViewMatrix();
+	mViewProj = mCamera.GetViewProj();
+}
+
+void D3DApp::UpdateSkybox(float deltaTime)
+{
+	mSkyBoxTranslationMX = XMMatrixTranslationFromVector(mCamera.GetPositionXM());
+	mSkyBoxTransformationMX = XMMatrixMultiply(mSkyBoxScalingMX, mSkyBoxTranslationMX);
+	XMStoreFloat4x4(&mSkyBox, mSkyBoxTransformationMX);
+}
+
+void D3DApp::UpdateLights(float deltaTime)
+{
+	//Directional Light
+	mDirectionalLightInfo.Data.Ambient = mGlobalAmbient;
+	mDirectionalLightInfo.Data.Diffuse = Colors::White;
+	mDirectionalLightInfo.Data.Specular = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+	mDirectionalLightInfo.Data.Direction = XMFLOAT3(0.0f, 1.0f, 1.0f);
+
+	//Point Light
+	mPointLightInfo.Data.Ambient = mGlobalAmbient;
+	mPointLightInfo.Data.Diffuse = Colors::Red;
+	mPointLightInfo.Data.Specular = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+	mPointLightInfo.Data.Position = XMFLOAT3(mCurrPointLightX, mCurrPointLightY, mCurrPointLightZ);
+	mPointLightInfo.Data.Range = 100.0f;
+	mPointLightInfo.Data.Attenuation = XMFLOAT3(0.0f, 0.1f, 0.0f);
+}
+
+
+
+void D3DApp::BuildSkyBox(const wchar_t* fileName)
+{
+	CreateDDSTextureFromFile(mD3DDevice, fileName, NULL, &mTrippySkyBoxSRV);
+	GeoFactory.GenerateSkyBox(skyBoxInfo);
+
+	D3D11_BUFFER_DESC vbd;
+	ZeroMemory(&vbd, sizeof(vbd));
+	vbd.Usage = D3D11_USAGE_IMMUTABLE;
+	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vbd.ByteWidth = skyBoxInfo.vbSize;
+
+	D3D11_SUBRESOURCE_DATA vbid;
+	ZeroMemory(&vbid, sizeof(vbid));
+	vbid.pSysMem = &skyBoxInfo.Vertices[0];
+	mD3DDevice->CreateBuffer(&vbd, &vbid, &mTSkyBoxVB);
+
+	D3D11_BUFFER_DESC ibd;
+	ZeroMemory(&ibd, sizeof(ibd));
+	ibd.Usage = D3D11_USAGE_IMMUTABLE;
+	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	ibd.ByteWidth = skyBoxInfo.ibSize;
+
+	D3D11_SUBRESOURCE_DATA ibid;
+	ZeroMemory(&ibid, sizeof(ibid));
+	ibid.pSysMem = &skyBoxInfo.Indices[0];
+	mD3DDevice->CreateBuffer(&ibd, &ibid, &mTSkyBoxIB);
+
+	mObjectConstBufferTSB.Initialize(mD3DDevice);
 }
