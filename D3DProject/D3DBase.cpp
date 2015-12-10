@@ -5,8 +5,6 @@ namespace
 	D3DBase* gD3DApp = 0;
 }
 
-
-
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	//Forward Messages properly, in the case of receiving messages before mMainWnd is initialized.

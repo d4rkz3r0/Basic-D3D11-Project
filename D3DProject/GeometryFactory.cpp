@@ -238,16 +238,55 @@ void GeometryFactory::GenerateSkyBox(PMeshData& meshData)
 	meshData.Indices.assign(&indices[0], &indices[meshData.ibCount]);
 }
 
-void GeometryFactory::GenerateModel(FMeshData& meshData, string& fileName, bool UVFlag, bool TriangSmoothNormalsFlag)
+void GeometryFactory::GenerateStaticQuad(ID3D11Device* device, FMeshData& meshData)
+{
+	FullVertex vertices[] =
+	{
+		// Front Face
+		FullVertex(-1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f),
+		FullVertex(-1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
+		FullVertex(1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f),
+		FullVertex(1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f)
+	};
+	meshData.mVertices.assign(&vertices[0], &vertices[ARRAYSIZE(vertices)]);
+
+	DWORD indices[] =
+	{
+		// Front Face
+		0, 1, 2,
+		0, 2, 3,
+	};
+	meshData.mIndices.assign(&indices[0], &indices[ARRAYSIZE(indices)]);
+}
+ 
+
+void GeometryFactory::GenerateModel(FMeshData& meshData, string& fileName,
+	bool UVFlag, bool triangulateFlag, bool genNormalsFlag, bool sortByPrimitiveType,
+	bool removeDupVertFlag)
 {
 	//Declare Importer
 	Assimp::Importer importer;
 
 	//Triangulate Flag + SortByPrimtiveType = No Point or Line Meshes.
 	UINT flags = 0;
-	if (TriangSmoothNormalsFlag)
+
+	if (removeDupVertFlag)
 	{
-		flags |= aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_GenSmoothNormals;
+		flags |= aiProcess_JoinIdenticalVertices;
+	}
+	if (sortByPrimitiveType)
+	{
+		flags |= aiProcess_SortByPType;
+	}
+
+	if (triangulateFlag)
+	{
+		flags |= aiProcess_Triangulate;
+	}
+
+	if (genNormalsFlag)
+	{
+		flags |= aiProcess_GenSmoothNormals;
 	}
 
 	if (UVFlag)
@@ -369,5 +408,19 @@ void GeometryFactory::GenerateModelBuffers(ID3D11Device* device, FMeshData& mesh
 	ZeroMemory(&indexSubResourceData, sizeof(indexSubResourceData));
 	indexSubResourceData.pSysMem = &meshData.mIndices[0];
 	device->CreateBuffer(&indexBufferDesc, &indexSubResourceData, indexBuffer);
-
 }
+
+void GeometryFactory::GenerateInstanceBuffer(ID3D11Device* device, std::vector<InstanceData>& instanceData, int numInstances, ID3D11Buffer** instanceBuffer)
+{
+	D3D11_BUFFER_DESC InstanceBufferDesc;
+	ZeroMemory(&InstanceBufferDesc, sizeof(InstanceBufferDesc));
+	InstanceBufferDesc.ByteWidth = sizeof(instanceData) * numInstances;
+	InstanceBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	InstanceBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA InstanceSubResourceData;
+	ZeroMemory(&InstanceSubResourceData, sizeof(InstanceSubResourceData));
+	InstanceSubResourceData.pSysMem = &instanceData[0];
+	device->CreateBuffer(&InstanceBufferDesc, &InstanceSubResourceData, instanceBuffer);
+}
+

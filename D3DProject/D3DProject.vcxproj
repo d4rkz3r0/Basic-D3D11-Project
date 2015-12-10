@@ -244,6 +244,7 @@
   <ItemGroup>
     <None Include="BasicPixelShader.csh" />
     <None Include="BasicVertexShader.csh" />
+    <None Include="InstancingVS.csh" />
     <None Include="SkyBoxPixelShader.csh" />
     <None Include="SkyBoxVertexShader.csh" />
     <None Include="TextureLightingPS.csh" />

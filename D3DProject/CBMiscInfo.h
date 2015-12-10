@@ -3,15 +3,17 @@
 using namespace DirectX;
 
 
-/*Quick and Dirty Info, unmanageable
--datablock1 x, y, z, w
-x - UVMultiplier
+/*Quick and Dirty Info
+-datablock1
+x - UVMultiplier for current Object
 y - 
 z - 
 w -
 -datablock2
-
-
+x - instanceXPos
+y - instanceYPos
+z - instanceZPos
+w -
 */
 
 

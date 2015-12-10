@@ -132,5 +132,8 @@
     <None Include="TextureLightingVS.csh">
       <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
     </None>
+    <None Include="InstancingVS.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
   </ItemGroup>
 </Project>

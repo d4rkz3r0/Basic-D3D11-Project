@@ -1,30 +1,42 @@
-//struct GSOutput
-//{
-//	float4 posH : SV_POSITION;
-//};
-//
-//struct GSInput
-//{
-//	point float4 input[3] : SV_POSITION;
-//
-//};
-//
-//[maxvertexcount(3)]
-//void main(inout TriangleStream< GSOutput > output)
-//{
-//	//append triangle, line, point data to a primitive
-//
-//	for (uint i = 0; i < 3; i++)
-//	{
-//		GSOutput element;
-//		element.pos = input[i];
-//		output.Append(element);
-//	}
-//	//Output vertex data in projected space 
-//	output.RestartStrip();
-//}
-//
-////Position
-////Rotation
-////Colors
-////TextureID
+// format of output verticies
+// these could be going to the
+// rasterizer the (SO)stage or both.
+struct GSOutput
+{
+	float4 color : COLOR;
+	float4 posH : SV_POSITION;
+};
+// convert each incoming world-space line segment into a projected triangle. 
+[maxvertexcount(3)] // max vertex data to be output (limit 1024 total scalars)
+void main(line float4 input[2] : SV_POSITION, inout TriangleStream< GSOutput > output)
+{
+	// red green and blue vertex
+	GSOutput verts[3] =
+	{
+		float4(1, 0, 0, 1), float4(0, 0, 0, 1),
+		float4(0, 1, 0, 1), float4(0, 0, 0, 1),
+		float4(0, 0, 1, 1), float4(0, 0, 0, 1)
+	};
+	// bottom left
+	verts[0].posH.xyz = input[0].xyz;
+	verts[0].posH.x -= 0.5f;
+	// bottom right
+	verts[2].posH = verts[0].posH;
+	verts[2].posH.x += 1.0f;
+	// top center
+	verts[1].posH.xyz = input[1].xyz;
+	// prep triangle for rasterization
+	float4x4 mVP = mul(mView, mProj);
+		for (uint i = 0; i < 3; ++i)
+			verts[i].posH = mul(verts[i].posH, mVP);
+	// send verts to the rasterizer
+	output.Append(verts[0]);
+	output.Append(verts[1]);
+	output.Append(verts[2]);
+	// do not connect to other triangles
+	output.RestartStrip();
+}
+
+SV_VertexID(uint VS stage)
+SV_InstanceID(uint VS stage)
+SV_PrimitiveID(uint GS / PS stage)

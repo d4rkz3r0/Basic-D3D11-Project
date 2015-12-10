@@ -1,6 +1,7 @@
 #pragma once
 #include "D3DUtils.h"
 #include "VertexRefs.h"
+#include "InstanceRefs.h"
 
 struct aiMesh;
 
@@ -73,6 +74,9 @@ class GeometryFactory
 		void GenerateCube(PCMeshData& meshData);
 		void GenerateGrid(PCMeshData& meshData);
 		void GenerateStar(PCMeshData& meshData);
-		void GenerateModel(FMeshData& meshData, string& fileName, bool UVFlag = false, bool TriangSmoothNormalsFlag = true);
+		void GenerateStaticQuad(ID3D11Device* device, FMeshData& meshData);
+		void GenerateModel(FMeshData& meshData, string& fileName, bool UVFlag = false, bool triangulateFlag = true, bool genNormalsFlag = true,	bool sortByPrimitiveType = true, bool removeDupVertFlag = true);
 		void GenerateModelBuffers(ID3D11Device* device, FMeshData& meshData, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer);
+		void GenerateInstanceBuffer(ID3D11Device* device, std::vector<InstanceData>& instanceInfo, int numInstances, ID3D11Buffer** instanceBuffer);
+
 };

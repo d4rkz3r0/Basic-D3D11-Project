@@ -49,3 +49,8 @@ struct SpotLight
 	XMFLOAT3 Attenuation;
 	float padding;
 };
+
+struct Material
+{
+	
+};

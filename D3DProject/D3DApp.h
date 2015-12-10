@@ -40,48 +40,41 @@ private:
 	////////////////////////////////////////////////////////////
 	// World Objects
 	////////////////////////////////////////////////////////////
-	// Current Object
+	//Current Object
 	XMMATRIX mWorld;
 
-	// Camera
+	//Camera
 	Camera mCamera;
 	XMMATRIX mView;
 	XMMATRIX mProj;
 	XMMATRIX mViewProj;
 	XMMATRIX mWorldViewProj;
-	float mCamScalar = 10.0f;
-	float mPointLightScalar = 20.0f;
+	float mCamScalar = 20.0f;
 
-	// Cube
+	//Cube
 	PCMeshData cubeInfo;
 	XMFLOAT4X4 mCube;
-	//Buffers
 	ID3D11Buffer* mCubeVB;
 	ID3D11Buffer* mCubeIB;
 	ConstantBuffer<cbPerObjectTransformation> mObjectConstBuffer;
-	//Shaders
 	ID3D11VertexShader* mSimpleVS;
 	ID3D11PixelShader* mSimplePS;
 	
-	// SkyBox
+	//SkyBox
 	PMeshData skyBoxInfo;
 	XMFLOAT4X4 mSkyBox;  
-	//Matrices
 	XMMATRIX mSkyBoxTranslationMX;
 	XMMATRIX mSkyBoxScalingMX;
 	XMMATRIX mSkyBoxTransformationMX;
-	const wchar_t* mSkyBoxFileName = L"windowsSkyBox.dds";
-	//Buffers
-	ID3D11Buffer* mTSkyBoxVB;
-	ID3D11Buffer* mTSkyBoxIB;
-	ConstantBuffer<cbPerObjectTransformation> mObjectConstBufferTSB;
-	//Shaders
+	const wchar_t* mSkyBoxFileName = L"nightBox.dds";
+	ID3D11Buffer* mSkyBoxVB;
+	ID3D11Buffer* mSkyBoxIB;
+	ConstantBuffer<cbPerObjectTransformation> mObjectConstBufferSB;
 	ID3D11VertexShader* mSkyBoxVS;
 	ID3D11PixelShader* mSkyBoxPS;
-	//Resource Views
-	ID3D11ShaderResourceView* mTrippySkyBoxSRV;
+	ID3D11ShaderResourceView* mSkyBoxSRV;
 
-	// TestModel
+	//Ground Quad
 	string mQuadFileName = "FloorQuad.obj";
 	const wchar_t* mQuadTextureFileName = L"catShocked.dds";
 	FMeshData mQuadMesh;
@@ -96,9 +89,9 @@ private:
 	ID3D11VertexShader* mTextureLightVS;
 	ID3D11PixelShader* mTextureLightPS;
 
-	// Stalker CS Model
-	string mStalkerFileName = "stalker_cs_rukzak_3.obj";
-	const wchar_t* mStalkerTextureFileName = L"clearsc.dds";
+	//Stalker
+	string mStalkerFileName = "stalker.obj";
+	const wchar_t* mStalkerTextureFileName = L"stalkerUVMapTexture.dds";
 	FMeshData mStalkerMesh;
 	XMFLOAT4X4 mStalker;
 	XMFLOAT3X3 mStalkerWorldSpaceMX;
@@ -111,32 +104,27 @@ private:
 	ConstantBuffer<cbPerObjectTransformation> mObjectConstBufferStalker;
 	ID3D11ShaderResourceView* mStalkerSRV;
 
-	// Lights
-	XMFLOAT4 mGlobalAmbient; 
+	//Lights
 	ConstantBuffer<DirectionalLight> mDirectionalLightInfo;
 	ConstantBuffer<PointLight> mPointLightInfo;
-	XMFLOAT3 mPointLightPos;
-	float mCurrPointLightX = 0.0f;
-	float mCurrPointLightY = 3.0f;
-	float mCurrPointLightZ = 0.0f;
+	ConstantBuffer<SpotLight> mSpotLightInfo;
+	float mCurrPointLightPosX = 0.0f;
+	float mCurrPointLightPosY = 1.0f;
+	float mCurrPointLightPosZ = 0.0f;
+	float mPointLightScalar = 20.0f;
+
+
+	//Materials Per Object
+	ConstantBuffer<cbPerObjectMaterial> mObjectMaterialConstBufferFactors;
 	
-	//Tree Instancing
-	ID3D11Buffer* mTreeInstanceBuffer;
-
-
-	//VERTEX SHADER Const Bufer INFO
-
-	//PIXEL SHADER Const Buffer INFO
-	float mUVDefaultScalar = 1.0f;
-	float mUVCatQuadScalar = 4.0f;
-
-	//MISC SHADER INFO
+	//Pixel Shader Misc Info
 	ConstantBuffer<cbMiscInfo> mShaderConstantBufferInfo;
 	XMFLOAT4 shaderInfoDataBlock1;
 	XMFLOAT4 shaderInfoDataBlock2;
 	XMFLOAT4 shaderInfoDataBlock3;
 	XMFLOAT4 shaderInfoDataBlock4;
-
+	float mUVDefaultScalar = 1.0f;
+	float mUVTiledGroundScalar = 4.0f;
 
 
 	/////////////////////////////////////////////////////////////
@@ -147,7 +135,6 @@ private:
 	ID3D11InputLayout* mPosColInputLayout;
 	ID3D11InputLayout* mNormVertexInputLayout;
 	ID3D11InputLayout* mFullVertexInputLayout;
-	ID3D11InputLayout* mGSInputLayout;
 	//Raster and Blend States
 	ID3D11RasterizerState* mDefaultRasterState;
 	ID3D11RasterizerState* mNoCullRasterState;
