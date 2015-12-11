@@ -1,6 +1,7 @@
 #pragma once
 #include <DirectXMath.h>
 using namespace DirectX;
+
 struct PosVertex
 {
 	XMFLOAT3 position;
@@ -42,4 +43,18 @@ struct FullVertex
 	XMFLOAT3 normal;
 	XMFLOAT3 tangent;
 	XMFLOAT2 texCoords;
+};
+
+struct PointSprite
+{
+	XMFLOAT4 Position;
+	XMFLOAT2 Size;
+
+	PointSprite() { }
+
+	PointSprite(const XMFLOAT4& position, const XMFLOAT2& size)
+		: Position(position), Size(size)
+	{
+
+	}
 };

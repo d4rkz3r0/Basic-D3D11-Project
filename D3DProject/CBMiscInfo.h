@@ -2,20 +2,24 @@
 #include <DirectXMath.h>
 using namespace DirectX;
 
-
 /*Quick and Dirty Info
--datablock1
+-datablock1 - Scalars
 x - UVMultiplier for current Object
 y - 
 z - 
+w - 
+-datablock2
+x - cameraWorldPosX
+y - cameraWorldPosX
+z - cameraWorldPosX
 w -
 -datablock2
-x - instanceXPos
-y - instanceYPos
-z - instanceZPos
+x - cameraUpVecX
+y - cameraUpVecY
+z - cameraUpVecZ
 w -
-*/
 
+*/
 
 struct cbMiscInfo
 {

@@ -2,7 +2,7 @@
 
 GeometryFactory::GeometryFactory()
 {
-
+	
 }
 
 GeometryFactory::~GeometryFactory()
@@ -424,3 +424,32 @@ void GeometryFactory::GenerateInstanceBuffer(ID3D11Device* device, std::vector<I
 	device->CreateBuffer(&InstanceBufferDesc, &InstanceSubResourceData, instanceBuffer);
 }
 
+void GeometryFactory::GenerateBillBoards(ID3D11Device* device, ID3D11Buffer** vertexBuffer, UINT maxBillboards, float billboardSize, float xPosRange, float height, float zPosRange)
+{
+	default_random_engine randGen(mRandDevice());
+	uniform_real_distribution<float> PosXDistribution(-xPosRange, xPosRange);
+	uniform_real_distribution<float> PosZDistribution(-zPosRange, zPosRange);
+
+	vector<PointSprite> vertices;
+	vertices.reserve(maxBillboards);
+	for (UINT i = 0; i < maxBillboards; i++)
+	{
+		float x = PosXDistribution(randGen);
+		float y = height;
+		float z = PosZDistribution(randGen);
+
+		vertices.push_back(PointSprite(XMFLOAT4(x, y, z, 1.0f), XMFLOAT2(billboardSize, billboardSize)));
+	}
+	UINT vertSize = vertices.size();
+
+	D3D11_BUFFER_DESC vertexBufferDesc;
+	ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
+	vertexBufferDesc.ByteWidth = sizeof(PointSprite) * vertSize;
+	vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA vertexSubResourceData;
+	ZeroMemory(&vertexSubResourceData, sizeof(vertexSubResourceData));
+	vertexSubResourceData.pSysMem = &vertices[0];
+	device->CreateBuffer(&vertexBufferDesc, &vertexSubResourceData, vertexBuffer);	
+}

@@ -63,6 +63,9 @@
     <ClInclude Include="CBMiscInfo.h">
       <Filter>Source Files\Constant Buffers</Filter>
     </ClInclude>
+    <ClInclude Include="InstanceRefs.h">
+      <Filter>Source Files\Instancing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">
@@ -92,6 +95,9 @@
     <Filter Include="Source Files\Constant Buffers">
       <UniqueIdentifier>{f6d49ed8-b8ed-46a4-8a21-749e10c16c0d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Instancing">
+      <UniqueIdentifier>{caf12eff-32ab-42f5-9b03-29d225b683e4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="BasicPixelShader.hlsl">
@@ -110,6 +116,15 @@
       <Filter>Source Files\Shaders\HLSL Source</Filter>
     </FxCompile>
     <FxCompile Include="TextureLightingPS.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source</Filter>
+    </FxCompile>
+    <FxCompile Include="BillBoardGS.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source</Filter>
+    </FxCompile>
+    <FxCompile Include="BillBoardVS.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source</Filter>
+    </FxCompile>
+    <FxCompile Include="BillBoardPS.hlsl">
       <Filter>Source Files\Shaders\HLSL Source</Filter>
     </FxCompile>
   </ItemGroup>
@@ -133,6 +148,15 @@
       <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
     </None>
     <None Include="InstancingVS.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+    <None Include="BillBoardGS.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+    <None Include="BillBoardPS.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+    <None Include="BillBoardVS.csh">
       <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
     </None>
   </ItemGroup>

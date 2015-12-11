@@ -38,11 +38,12 @@ mNormVertexInputLayout(NULL)
 	XMStoreFloat4x4(&mSkyBox, IdentityMX);
 	XMStoreFloat4x4(&mQuad, IdentityMX);
 	XMStoreFloat4x4(&mStalker, IdentityMX);
-	
+	XMStoreFloat4x4(&mCyberDemons, IdentityMX);
+
 	//Skybox
 	mSkyBoxScalingMX = XMMatrixScaling(666.0f, 666.0f, 666.0f);
 	//Quad
-	mQuadScalingMX = XMMatrixScaling(2.0f, 2.0f, 2.0f);
+	mQuadScalingMX = XMMatrixScaling(6.0f, 6.0f, 6.0f);
 	XMStoreFloat4x4(&mQuad, mQuadScalingMX);
 
 	//Stalker
@@ -57,6 +58,11 @@ mNormVertexInputLayout(NULL)
 	XMStoreFloat4(&shaderInfoDataBlock2, XMVectorZero());
 	XMStoreFloat4(&shaderInfoDataBlock3, XMVectorZero());
 	XMStoreFloat4(&shaderInfoDataBlock4, XMVectorZero());
+
+	//CyberDemons
+	//mCyberDemonTranslationMX = XMMatrixTranslation(0.0f, 0.0f, 20.0f);
+	//mCyberDemonTransformationMX = mCyberDemonTranslationMX;
+	//XMStoreFloat4x4(&mCyberDemons, mCyberDemonTransformationMX);
 }
 
 D3DApp::~D3DApp()
@@ -90,8 +96,12 @@ D3DApp::~D3DApp()
 	SAFE_RELEASE(mStalkerVB);
 	SAFE_RELEASE(mStalkerIB);
 	SAFE_RELEASE(mStalkerSRV);
-
-
+	SAFE_RELEASE(mCyberDemonVB);
+	SAFE_RELEASE(mCyberDemonSRV);
+	SAFE_RELEASE(mBillBoardVS);
+	SAFE_RELEASE(mBillBoardGS);
+	SAFE_RELEASE(mBillBoardPS);
+	SAFE_RELEASE(mBillBoardInputLayout);
 }
 
 bool D3DApp::Init()
@@ -177,10 +187,10 @@ void D3DApp::Draw()
 	mD3DDeviceContext->PSSetShader(mSkyBoxPS, NULL, 0);
 	mWorld = XMLoadFloat4x4(&mSkyBox);
 	mWorldViewProj = XMMatrixMultiply(mWorld, mViewProj);
-	cbPerObjectTransformation mPerObjectCBTSB;
-	XMStoreFloat4x4(&mPerObjectCBTSB.mWorldViewProj, mWorldViewProj);
-	XMStoreFloat4x4(&mPerObjectCBTSB.mWorldMatrix, mWorld);
-	mObjectConstBufferSB.Data = mPerObjectCBTSB;
+	cbPerObjectTransformation mPerObjectCBSkyBox;
+	XMStoreFloat4x4(&mPerObjectCBSkyBox.mWorldViewProj, mWorldViewProj);
+	XMStoreFloat4x4(&mPerObjectCBSkyBox.mWorldMatrix, mWorld);
+	mObjectConstBufferSB.Data = mPerObjectCBSkyBox;
 	mObjectConstBufferSB.ApplyChanges(mD3DDeviceContext);
 	auto cBufferTSB = mObjectConstBufferSB.Buffer();
 	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBufferTSB);
@@ -260,6 +270,37 @@ void D3DApp::Draw()
 	mD3DDeviceContext->RSSetState(mDefaultRasterState);
 	mD3DDeviceContext->DrawIndexed(mStalkerMesh.mIndices.size(), 0, 0);
 
+	//CyberDemons
+	UINT strideBillBoard = sizeof(PointSprite);
+	UINT offsetBillBoard = 0;
+	mD3DDeviceContext->IASetInputLayout(mBillBoardInputLayout);
+	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+	mD3DDeviceContext->IASetVertexBuffers(2, 1, &mCyberDemonVB, &strideBillBoard, &offsetBillBoard);
+	mD3DDeviceContext->VSSetShader(mBillBoardVS, NULL, 0);
+	mD3DDeviceContext->GSSetShader(mBillBoardGS, NULL, 0);
+	mD3DDeviceContext->PSSetShader(mBillBoardPS, NULL, 0);
+	mWorld = XMLoadFloat4x4(&mCyberDemons);
+	mWorldViewProj = XMMatrixMultiply(mWorld, mViewProj);
+	mWorldViewProj = mViewProj;
+	cbPerObjectTransformation mPerPointSpriteCB;
+	XMStoreFloat4x4(&mPerPointSpriteCB.mWorldViewProj, mWorldViewProj);
+	XMStoreFloat4x4(&mPerPointSpriteCB.mWorldMatrix, XMMatrixIdentity());
+	mObjectConstantBufferShaderInfo.Data = mPerPointSpriteCB;
+	mObjectConstantBufferShaderInfo.ApplyChanges(mD3DDeviceContext);
+	auto cBufferPointSprite = mObjectConstantBufferShaderInfo.Buffer();
+	ShaderMiscCB.dataBlock1.x = mUVCyberDemonBillBoardUVx;
+	ShaderMiscCB.dataBlock1.y = mUVCyberDemonBillBoardUVy;
+	mShaderConstantBufferInfo.Data = ShaderMiscCB;
+	mShaderConstantBufferInfo.ApplyChanges(mD3DDeviceContext);
+	mD3DDeviceContext->GSSetConstantBuffers(0, 1, &cBufferPointSprite);
+	mD3DDeviceContext->GSSetConstantBuffers(10, 1, &cBufferShaderMiscInfo);
+	mD3DDeviceContext->PSSetConstantBuffers(10, 1, &cBufferShaderMiscInfo);
+	mD3DDeviceContext->PSSetSamplers(0, 1, &mLinearSamplerState);
+	mD3DDeviceContext->PSSetShaderResources(0, 1, &mCyberDemonSRV);
+	mD3DDeviceContext->RSSetState(mNoCullRasterState);
+	mD3DDeviceContext->Draw(10, 0);
+	mD3DDeviceContext->GSSetShader(NULL, NULL, NULL);
+	mD3DDeviceContext->RSSetState(mDefaultRasterState);
 
 
 
@@ -267,7 +308,7 @@ void D3DApp::Draw()
 
 
 
-	mSwapChain->Present(0, 0);
+	mSwapChain->Present(1, 0);
 }
 
 
@@ -318,10 +359,14 @@ void D3DApp::BuildGeometryAndBuffers()
 	GeoFactory.GenerateModelBuffers(mD3DDevice, mStalkerMesh, &mStalkerVB, &mStalkerIB);
 	mObjectConstBufferStalker.Initialize(mD3DDevice);
 
+	//CyberWarrior BillBoards
+	GeoFactory.GenerateBillBoards(mD3DDevice, &mCyberDemonVB, 20, 6.0f, 50.0f, 3.0f, 50.0f);
+	CreateDDSTextureFromFile(mD3DDevice, mCyberDemonTextureFileName, NULL, &mCyberDemonSRV);
+	mObjectConstantBufferShaderInfo.Initialize(mD3DDevice);
+
+
 	//Shader Misc
 	mShaderConstantBufferInfo.Initialize(mD3DDevice);
-
-
 }
 
 void D3DApp::CompileShaders()
@@ -332,6 +377,9 @@ void D3DApp::CompileShaders()
 	mD3DDevice->CreatePixelShader(SkyBoxPixelShader, sizeof(SkyBoxPixelShader), NULL, &mSkyBoxPS);
 	mD3DDevice->CreateVertexShader(TextureLightingVS, sizeof(TextureLightingVS), NULL, &mTextureLightVS);
 	mD3DDevice->CreatePixelShader(TextureLightingPS, sizeof(TextureLightingPS), NULL, &mTextureLightPS);
+	mD3DDevice->CreateVertexShader(BillBoardVS, sizeof(BillBoardVS), NULL, &mBillBoardVS);
+	mD3DDevice->CreateGeometryShader(BillBoardGS, sizeof(BillBoardGS), NULL, &mBillBoardGS);
+	mD3DDevice->CreatePixelShader(BillBoardPS, sizeof(BillBoardPS), NULL, &mBillBoardPS);
 }
 
 void D3DApp::DefineInputLayouts()
@@ -350,6 +398,13 @@ void D3DApp::DefineInputLayouts()
 	};
 	mD3DDevice->CreateInputLayout(posVertexDesc, ARRAYSIZE(posVertexDesc), SkyBoxVertexShader, sizeof(SkyBoxVertexShader), &mPosInputLayout);
 	
+	D3D11_INPUT_ELEMENT_DESC billboardSpriteDesc[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "SIZE", 0, DXGI_FORMAT_R32G32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	};
+	mD3DDevice->CreateInputLayout(billboardSpriteDesc, ARRAYSIZE(billboardSpriteDesc), BillBoardVS, sizeof(BillBoardVS), &mBillBoardInputLayout);
+
 
 	D3D11_INPUT_ELEMENT_DESC instanceBufferDesc[]
 	{
@@ -357,7 +412,7 @@ void D3DApp::DefineInputLayouts()
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 7, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 7, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 7, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "IPOSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 7, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
+		//{ "IPOSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 7, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
 	};
 
 	D3D11_INPUT_ELEMENT_DESC fullVertexDesc[] =
@@ -370,6 +425,9 @@ void D3DApp::DefineInputLayouts()
 	};
 	mD3DDevice->CreateInputLayout(fullVertexDesc, ARRAYSIZE(fullVertexDesc), TextureLightingVS, sizeof(TextureLightingVS), &mFullVertexInputLayout);
 
+	
+
+	
 
 }
 
@@ -387,15 +445,16 @@ void D3DApp::BuildStateConfigurations()
 	ZeroMemory(&rs, sizeof(rs));
 	rs.FillMode = D3D11_FILL_SOLID;
 	rs.CullMode = D3D11_CULL_BACK;
+	rs.MultisampleEnable = true;
 	rs.AntialiasedLineEnable = rs.DepthClipEnable = true;
 	mDefaultRasterState = NULL;
 	mD3DDevice->CreateRasterizerState(&rs, &mDefaultRasterState);
-
-	
+		
 	D3D11_RASTERIZER_DESC rs1;
 	ZeroMemory(&rs1, sizeof(rs1));
 	rs1.FillMode = D3D11_FILL_SOLID;
 	rs1.CullMode = D3D11_CULL_NONE;
+	rs1.MultisampleEnable = true;
 	mNoCullRasterState = NULL;
 	mD3DDevice->CreateRasterizerState(&rs1, &mNoCullRasterState);
 
@@ -413,6 +472,7 @@ void D3DApp::BuildStateConfigurations()
 	wfd.CullMode = D3D11_CULL_BACK;
 	wfd.FrontCounterClockwise = false;
 	wfd.DepthClipEnable = true;
+	wfd.MultisampleEnable = true;
 	mD3DDevice->CreateRasterizerState(&wfd, &mWireFrameRasterState);
 
 	D3D11_BLEND_DESC aTcd;
@@ -535,6 +595,7 @@ void D3DApp::UpdateCamera(float deltaTime)
 	mCamera.UpdateViewMatrix();
 	mViewProj = mCamera.GetViewProj();
 	XMStoreFloat4(&shaderInfoDataBlock2, mCamera.GetPositionXM());
+	XMStoreFloat4(&shaderInfoDataBlock3, mCamera.GetUpXM());
 }
 
 void D3DApp::UpdateSkybox(float deltaTime)

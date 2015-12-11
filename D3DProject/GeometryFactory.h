@@ -59,10 +59,9 @@ struct FModelInfo
 	FModelInfo(){}
 
 	vector<FMeshData> mObjectMeshes;
-	UINT mNumMeshses;
-
-
+	UINT mNumMeshes;
 };
+
 
 class GeometryFactory
 {
@@ -78,5 +77,7 @@ class GeometryFactory
 		void GenerateModel(FMeshData& meshData, string& fileName, bool UVFlag = false, bool triangulateFlag = true, bool genNormalsFlag = true,	bool sortByPrimitiveType = true, bool removeDupVertFlag = true);
 		void GenerateModelBuffers(ID3D11Device* device, FMeshData& meshData, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer);
 		void GenerateInstanceBuffer(ID3D11Device* device, std::vector<InstanceData>& instanceInfo, int numInstances, ID3D11Buffer** instanceBuffer);
+		void GenerateBillBoards(ID3D11Device* device, ID3D11Buffer** vertexBuffer, UINT maxBillboards, float billboardSize, float xPosRange, float height, float zPosRange);
 
+		random_device mRandDevice;
 };

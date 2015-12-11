@@ -5,3 +5,6 @@
 #include "SkyBoxPixelShader.csh"
 #include "TextureLightingVS.csh"
 #include "TextureLightingPS.csh"
+#include "BillBoardVS.csh"
+#include "BillBoardGS.csh"
+#include "BillBoardPS.csh"

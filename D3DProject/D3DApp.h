@@ -57,8 +57,6 @@ private:
 	ID3D11Buffer* mCubeVB;
 	ID3D11Buffer* mCubeIB;
 	ConstantBuffer<cbPerObjectTransformation> mObjectConstBuffer;
-	ID3D11VertexShader* mSimpleVS;
-	ID3D11PixelShader* mSimplePS;
 	
 	//SkyBox
 	PMeshData skyBoxInfo;
@@ -70,8 +68,6 @@ private:
 	ID3D11Buffer* mSkyBoxVB;
 	ID3D11Buffer* mSkyBoxIB;
 	ConstantBuffer<cbPerObjectTransformation> mObjectConstBufferSB;
-	ID3D11VertexShader* mSkyBoxVS;
-	ID3D11PixelShader* mSkyBoxPS;
 	ID3D11ShaderResourceView* mSkyBoxSRV;
 
 	//Ground Quad
@@ -86,12 +82,10 @@ private:
 	ID3D11Buffer* mQuadIB;
 	ConstantBuffer<cbPerObjectTransformation> mObjectConstBufferQuad;
 	ID3D11ShaderResourceView* mQuadSRV;
-	ID3D11VertexShader* mTextureLightVS;
-	ID3D11PixelShader* mTextureLightPS;
-
+	
 	//Stalker
-	string mStalkerFileName = "stalker.obj";
-	const wchar_t* mStalkerTextureFileName = L"stalkerUVMapTexture.dds";
+	string mStalkerFileName = "stalkerModel.obj";
+	const wchar_t* mStalkerTextureFileName = L"stalkerUVTexture.dds";
 	FMeshData mStalkerMesh;
 	XMFLOAT4X4 mStalker;
 	XMFLOAT3X3 mStalkerWorldSpaceMX;
@@ -113,6 +107,17 @@ private:
 	float mCurrPointLightPosZ = 0.0f;
 	float mPointLightScalar = 20.0f;
 
+	//CyberDemon
+	const wchar_t* mCyberDemonTextureFileName = L"cyberDemonUVTexture.dds";
+	const int mNumOfCyberDemons = 100;
+	ID3D11Buffer* mCyberDemonVB;
+	ID3D11Buffer* mCyberDemonInstanceBuffer;
+	ID3D11ShaderResourceView* mCyberDemonSRV;
+	ConstantBuffer<cbPerObjectTransformation> mObjectConstantBufferShaderInfo;
+	XMFLOAT4X4 mCyberDemons;
+	XMMATRIX mCyberDemonTranslationMX;
+	XMMATRIX mCyberDemonTransformationMX;
+
 
 	//Materials Per Object
 	ConstantBuffer<cbPerObjectMaterial> mObjectMaterialConstBufferFactors;
@@ -124,7 +129,9 @@ private:
 	XMFLOAT4 shaderInfoDataBlock3;
 	XMFLOAT4 shaderInfoDataBlock4;
 	float mUVDefaultScalar = 1.0f;
-	float mUVTiledGroundScalar = 4.0f;
+	float mUVTiledGroundScalar = 16.0f;
+	float mUVCyberDemonBillBoardUVx = 0.5f;
+	float mUVCyberDemonBillBoardUVy = 1.0f;
 
 
 	/////////////////////////////////////////////////////////////
@@ -135,6 +142,8 @@ private:
 	ID3D11InputLayout* mPosColInputLayout;
 	ID3D11InputLayout* mNormVertexInputLayout;
 	ID3D11InputLayout* mFullVertexInputLayout;
+	ID3D11InputLayout* mBillBoardInputLayout;
+	
 	//Raster and Blend States
 	ID3D11RasterizerState* mDefaultRasterState;
 	ID3D11RasterizerState* mNoCullRasterState;
@@ -146,6 +155,16 @@ private:
 	ID3D11DepthStencilState* mLessEqualDSS;
 	//Sampler States
 	ID3D11SamplerState* mLinearSamplerState;
+	//Shaders
+	ID3D11VertexShader* mSimpleVS;
+	ID3D11PixelShader* mSimplePS;
+	ID3D11VertexShader* mSkyBoxVS;
+	ID3D11PixelShader* mSkyBoxPS;
+	ID3D11VertexShader* mTextureLightVS;
+	ID3D11PixelShader* mTextureLightPS;
+	ID3D11VertexShader* mBillBoardVS;
+	ID3D11GeometryShader* mBillBoardGS;
+	ID3D11PixelShader* mBillBoardPS;
 
 	/////////////////////////////////////////////////////////////
 	// Win32 & Misc Variables

@@ -3,7 +3,6 @@
 #include <Windows.h>
 #include <WindowsX.h>
 #include <d3d11.h>
-#include <dinput.h>
 #include <DirectXMath.h>
 #include <vector>
 #include <cassert>
@@ -14,6 +13,7 @@
 #include <sstream>
 #include <fstream>
 #include <istream>
+#include <random>
 #include "DDSTextureLoader.h"
 #include "assimp/include/assimp/Importer.hpp"
 #include "assimp/include/assimp/scene.h"
@@ -44,4 +44,3 @@ namespace Colors
 #define SAFE_RELEASE(comObj) { if ( (comObj) ) { (comObj)->Release(); (comObj) = 0; } }
 #define SAFE_DELETE(myObj) if( (myObj) != nullptr ) delete (myObj); (myObj) = nullptr;
 #define SAFE_DELETES(myObjs) if( (myObjs) != nullptr ) delete[] (myObjs); (myObjs) = nullptr;
-

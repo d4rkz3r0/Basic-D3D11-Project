@@ -120,7 +120,9 @@ void D3DBase::ResizeWindow()
 	//BackBuffer
 	mSwapChain->ResizeBuffers(1, mWindowWidth, mWindowHeight, DXGI_FORMAT_UNKNOWN, NULL);
 	ID3D11Texture2D* backBuffer;
+	
 	mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffer));
+	//D3D11_TEX2DMS_RTV structure not required
 	mD3DDevice->CreateRenderTargetView(backBuffer, NULL, &mRenderTargetView);
 	SAFE_RELEASE(backBuffer);
 
@@ -136,6 +138,9 @@ void D3DBase::ResizeWindow()
 	depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	depthStencilDesc.CPUAccessFlags = 0;
 	depthStencilDesc.MiscFlags = 0;
+	depthStencilDesc.SampleDesc.Count = 4;
+	depthStencilDesc.SampleDesc.Quality = m4xMSAAQualityLevel - 1;
+
 
 	//Re-enable MSAA
 	if (mEnable4xMSAA)
@@ -150,6 +155,7 @@ void D3DBase::ResizeWindow()
 	}
 
 	mD3DDevice->CreateTexture2D(&depthStencilDesc, 0, &mDepthStencilBuffer);
+	//D3D11_TEX2DMS_DSV not required
 	mD3DDevice->CreateDepthStencilView(mDepthStencilBuffer, 0, &mDepthStencilView);
 	mD3DDeviceContext->OMSetRenderTargets(1, &mRenderTargetView, mDepthStencilView);
 	
@@ -365,6 +371,8 @@ bool D3DBase::Direct3DInit()
 	swapChainDesc.OutputWindow = mMainWnd;
 	swapChainDesc.Windowed = true;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+	swapChainDesc.SampleDesc.Count = 4;
+	swapChainDesc.SampleDesc.Quality = m4xMSAAQualityLevel - 1;
 
 	if (mEnable4xMSAA)
 	{
