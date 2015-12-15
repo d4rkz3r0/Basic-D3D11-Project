@@ -18,14 +18,14 @@ void GeometryFactory::GenerateCube(PCMeshData& meshData)
 
 	PosColVertex vertices[] =
 	{
-		{ XMFLOAT3(-1.0f, -1.0f, -1.0f), Colors::Red },
-		{ XMFLOAT3(-1.0f, +1.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +1.0f, -1.0f), Colors::Blue },
-		{ XMFLOAT3(+1.0f, -1.0f, -1.0f), Colors::Red },
-		{ XMFLOAT3(-1.0f, -1.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +1.0f, +1.0f), Colors::Blue },
-		{ XMFLOAT3(+1.0f, +1.0f, +1.0f), Colors::Red },
-		{ XMFLOAT3(+1.0f, -1.0f, +1.0f), Colors::Green }
+		{ XMFLOAT3(-1.0f, -1.0f, -1.0f), ManualColors ::Red },
+		{ XMFLOAT3(-1.0f, +1.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +1.0f, -1.0f), ManualColors::Blue },
+		{ XMFLOAT3(+1.0f, -1.0f, -1.0f), ManualColors::Red },
+		{ XMFLOAT3(-1.0f, -1.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +1.0f, +1.0f), ManualColors::Blue },
+		{ XMFLOAT3(+1.0f, +1.0f, +1.0f), ManualColors::Red },
+		{ XMFLOAT3(+1.0f, -1.0f, +1.0f), ManualColors::Green }
 	};
 	meshData.vbCount = ARRAYSIZE(vertices);
 	meshData.vbSize = sizeof(PosColVertex) * meshData.vbCount;
@@ -59,91 +59,91 @@ void GeometryFactory::GenerateGrid(PCMeshData& meshData)
 	PosColVertex vertices[] =
 	{
 		//Vertical Line Points
-		{ XMFLOAT3(-1.0f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(-0.9f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(-0.9f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(-0.8f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(-0.8f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(-0.7f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(-0.7f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(-0.6f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(-0.6f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(-0.5f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(-0.5f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(-0.4f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(-0.4f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(-0.3f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(-0.3f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(-0.2f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(-0.2f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(-0.1f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(-0.1f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(+0.0f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(+0.0f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(+0.1f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(+0.1f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(+0.2f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(+0.2f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(+0.3f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(+0.3f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(+0.4f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(+0.4f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(+0.5f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(+0.5f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(+0.6f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(+0.6f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(+0.7f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(+0.7f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(+0.8f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(+0.8f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(+0.9f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(+0.9f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, -1.0f), Colors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(-0.9f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(-0.9f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(-0.8f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(-0.8f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(-0.7f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(-0.7f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(-0.6f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(-0.6f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(-0.5f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(-0.5f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(-0.4f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(-0.4f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(-0.3f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(-0.3f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(-0.2f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(-0.2f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(-0.1f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(-0.1f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.0f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.0f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.1f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.1f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.2f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.2f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.3f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.3f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.4f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.4f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.5f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.5f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.6f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.6f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.7f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.7f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.8f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.8f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.9f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(+0.9f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, -1.0f), ManualColors::Green },
 		//Horizontal Line Points
-		{ XMFLOAT3(-1.0f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, +1.0f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, +0.9f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, +0.9f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, +0.8f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, +0.8f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, +0.7f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, +0.7f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, +0.6f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, +0.6f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, +0.5f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, +0.5f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, +0.4f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, +0.4f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, +0.3f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, +0.3f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, +0.2f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, +0.2f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, +0.1f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, +0.1f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, +0.0f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, +0.0f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, -0.1f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, -0.1f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, -0.2f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, -0.2f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, -0.3f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, -0.3f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, -0.4f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, -0.4f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, -0.5f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, -0.5f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, -0.6f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, -0.6f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, -0.7f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, -0.7f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, -0.8f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, -0.8f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, -0.9f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, -0.9f), Colors::Green },
-		{ XMFLOAT3(-1.0f, +0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(+1.0f, +0.0f, -1.0f), Colors::Green }
+		{ XMFLOAT3(-1.0f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, +1.0f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, +0.9f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, +0.9f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, +0.8f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, +0.8f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, +0.7f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, +0.7f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, +0.6f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, +0.6f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, +0.5f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, +0.5f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, +0.4f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, +0.4f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, +0.3f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, +0.3f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, +0.2f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, +0.2f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, +0.1f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, +0.1f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, +0.0f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, +0.0f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, -0.1f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, -0.1f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, -0.2f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, -0.2f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, -0.3f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, -0.3f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, -0.4f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, -0.4f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, -0.5f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, -0.5f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, -0.6f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, -0.6f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, -0.7f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, -0.7f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, -0.8f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, -0.8f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, -0.9f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, -0.9f), ManualColors::Green },
+		{ XMFLOAT3(-1.0f, +0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(+1.0f, +0.0f, -1.0f), ManualColors::Green }
 	};
 	meshData.vbCount = ARRAYSIZE(vertices);
 	meshData.vbSize = sizeof(PosColVertex) * meshData.vbCount;
@@ -157,18 +157,18 @@ void GeometryFactory::GenerateStar(PCMeshData& meshData)
 
 	PosColVertex vertices[] =
 	{
-		{ XMFLOAT3(-1.75f, 2.0f, 0.0f), Colors::Red },
-		{ XMFLOAT3(0.0f, 7.0f, 0.0f), Colors::Green },
-		{ XMFLOAT3(1.75f, 2.0f, 0.0f), Colors::Blue },
-		{ XMFLOAT3(-3.5f, -2.0f, 0.0f), Colors::Red },
-		{ XMFLOAT3(-7.0f, 1.5f, 0.0f), Colors::Green },
-		{ XMFLOAT3(7.0f, 1.5f, 0.0f), Colors::Blue },
-		{ XMFLOAT3(3.5f, -2.0f, 0.0f), Colors::Red },
-		{ XMFLOAT3(5.0f, -7.0f, 0.0f), Colors::Green },
-		{ XMFLOAT3(0.0f, -4.5f, 0.0f), Colors::Blue },
-		{ XMFLOAT3(-5.0f, -7.0f, 0.0f), Colors::Red },
-		{ XMFLOAT3(0.0f, 0.0f, -1.0f), Colors::Green },
-		{ XMFLOAT3(0.0f, 0.0f, +1.0f), Colors::Blue }
+		{ XMFLOAT3(-1.75f, 2.0f, 0.0f), ManualColors::Red },
+		{ XMFLOAT3(0.0f, 7.0f, 0.0f), ManualColors::Green },
+		{ XMFLOAT3(1.75f, 2.0f, 0.0f), ManualColors::Blue },
+		{ XMFLOAT3(-3.5f, -2.0f, 0.0f), ManualColors::Red },
+		{ XMFLOAT3(-7.0f, 1.5f, 0.0f), ManualColors::Green },
+		{ XMFLOAT3(7.0f, 1.5f, 0.0f), ManualColors::Blue },
+		{ XMFLOAT3(3.5f, -2.0f, 0.0f), ManualColors::Red },
+		{ XMFLOAT3(5.0f, -7.0f, 0.0f), ManualColors::Green },
+		{ XMFLOAT3(0.0f, -4.5f, 0.0f), ManualColors::Blue },
+		{ XMFLOAT3(-5.0f, -7.0f, 0.0f), ManualColors::Red },
+		{ XMFLOAT3(0.0f, 0.0f, -1.0f), ManualColors::Green },
+		{ XMFLOAT3(0.0f, 0.0f, +1.0f), ManualColors::Blue }
 	};
 	meshData.vbCount = ARRAYSIZE(vertices);
 	meshData.vbSize = sizeof(PosColVertex) * meshData.vbCount;
@@ -238,17 +238,17 @@ void GeometryFactory::GenerateSkyBox(PMeshData& meshData)
 	meshData.Indices.assign(&indices[0], &indices[meshData.ibCount]);
 }
 
-void GeometryFactory::GenerateStaticQuad(ID3D11Device* device, FMeshData& meshData)
+void GeometryFactory::GenerateStaticQuad(ID3D11Device* device, MeshData& meshData)
 {
-	FullVertex vertices[] =
+	Vertex vertices[] =
 	{
 		// Front Face
-		FullVertex(-1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f),
-		FullVertex(-1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
-		FullVertex(1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f),
-		FullVertex(1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f)
+		Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f),
+		Vertex(-1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f),
+		Vertex(1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f),
+		Vertex(1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f)
 	};
-	meshData.mVertices.assign(&vertices[0], &vertices[ARRAYSIZE(vertices)]);
+	meshData.Vertices.assign(&vertices[0], &vertices[ARRAYSIZE(vertices)]);
 
 	DWORD indices[] =
 	{
@@ -256,7 +256,7 @@ void GeometryFactory::GenerateStaticQuad(ID3D11Device* device, FMeshData& meshDa
 		0, 1, 2,
 		0, 2, 3,
 	};
-	meshData.mIndices.assign(&indices[0], &indices[ARRAYSIZE(indices)]);
+	meshData.Indices.assign(&indices[0], &indices[ARRAYSIZE(indices)]);
 }
  
 
@@ -385,7 +385,7 @@ void GeometryFactory::GenerateModel(FMeshData& meshData, string& fileName,
 	}
 }
 
-void GeometryFactory::GenerateModelBuffers(ID3D11Device* device, FMeshData& meshData, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer)
+void GeometryFactory::GenerateVertexAndIndexBuffers(ID3D11Device* device, FMeshData& meshData, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer)
 {
 	D3D11_BUFFER_DESC vertexBufferDesc;
 	ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
@@ -410,19 +410,31 @@ void GeometryFactory::GenerateModelBuffers(ID3D11Device* device, FMeshData& mesh
 	device->CreateBuffer(&indexBufferDesc, &indexSubResourceData, indexBuffer);
 }
 
-void GeometryFactory::GenerateInstanceBuffer(ID3D11Device* device, std::vector<InstanceData>& instanceData, int numInstances, ID3D11Buffer** instanceBuffer)
+void GeometryFactory::GenerateVertexAndIndexBuffersNon(ID3D11Device* device, MeshData& meshData, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer)
 {
-	D3D11_BUFFER_DESC InstanceBufferDesc;
-	ZeroMemory(&InstanceBufferDesc, sizeof(InstanceBufferDesc));
-	InstanceBufferDesc.ByteWidth = sizeof(instanceData) * numInstances;
-	InstanceBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	InstanceBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	D3D11_BUFFER_DESC vertexBufferDesc;
+	ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
+	vertexBufferDesc.ByteWidth = sizeof(FullVertex) * meshData.Vertices.size();
+	vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 
-	D3D11_SUBRESOURCE_DATA InstanceSubResourceData;
-	ZeroMemory(&InstanceSubResourceData, sizeof(InstanceSubResourceData));
-	InstanceSubResourceData.pSysMem = &instanceData[0];
-	device->CreateBuffer(&InstanceBufferDesc, &InstanceSubResourceData, instanceBuffer);
+	D3D11_SUBRESOURCE_DATA vertexSubResourceData;
+	ZeroMemory(&vertexSubResourceData, sizeof(vertexSubResourceData));
+	vertexSubResourceData.pSysMem = &meshData.Vertices[0];
+	device->CreateBuffer(&vertexBufferDesc, &vertexSubResourceData, vertexBuffer);
+
+	D3D11_BUFFER_DESC indexBufferDesc;
+	ZeroMemory(&indexBufferDesc, sizeof(indexBufferDesc));
+	indexBufferDesc.ByteWidth = sizeof(UINT) * meshData.Indices.size();
+	indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA indexSubResourceData;
+	ZeroMemory(&indexSubResourceData, sizeof(indexSubResourceData));
+	indexSubResourceData.pSysMem = &meshData.Indices[0];
+	device->CreateBuffer(&indexBufferDesc, &indexSubResourceData, indexBuffer);
 }
+
 
 void GeometryFactory::GenerateBillBoards(ID3D11Device* device, ID3D11Buffer** vertexBuffer, UINT maxBillboards, float billboardSize, float xPosRange, float height, float zPosRange)
 {
@@ -432,6 +444,7 @@ void GeometryFactory::GenerateBillBoards(ID3D11Device* device, ID3D11Buffer** ve
 
 	vector<PointSprite> vertices;
 	vertices.reserve(maxBillboards);
+
 	for (UINT i = 0; i < maxBillboards; i++)
 	{
 		float x = PosXDistribution(randGen);
@@ -451,5 +464,62 @@ void GeometryFactory::GenerateBillBoards(ID3D11Device* device, ID3D11Buffer** ve
 	D3D11_SUBRESOURCE_DATA vertexSubResourceData;
 	ZeroMemory(&vertexSubResourceData, sizeof(vertexSubResourceData));
 	vertexSubResourceData.pSysMem = &vertices[0];
-	device->CreateBuffer(&vertexBufferDesc, &vertexSubResourceData, vertexBuffer);	
+	device->CreateBuffer(&vertexBufferDesc, &vertexSubResourceData, vertexBuffer);
+}
+
+void GeometryFactory::GenerateInstanceBuffer(ID3D11Device* device, ID3D11Buffer** instanceBuffer, std::vector<InstanceData>& instanceData, UINT numInstances, float xPosRange, float height, float zPosRange)
+{
+	default_random_engine randGen(mRandDevice());
+	//Instance Position
+	uniform_real_distribution<float> PosXDistribution(-52.0f, -50.0f);
+	uniform_real_distribution<float> PosZDistribution(-50.0f, 50.0f);
+	//Instance Rotation
+	uniform_real_distribution<float> RotYDistribution(-0.0f, 360.0f);
+	//Instance Color
+	uniform_real_distribution<float> ColorXDistribution(0.0f, 1.0f);
+	uniform_real_distribution<float> ColorYDistribution(0.0f, 1.0f);
+	uniform_real_distribution<float> ColorZDistribution(0.0f, 1.0f);
+	
+
+
+	instanceData.reserve(numInstances);
+	instanceData.resize(numInstances);
+
+	for (UINT i = 0; i < numInstances; i++)
+	{
+		//Position
+		float xPos = PosXDistribution(randGen);
+		float yPos = height;
+		float zPos = PosZDistribution(randGen);
+		XMMATRIX instanceTranslationMX = XMMatrixTranslationFromVector(XMVectorSet(xPos, yPos, zPos, 1.0f));
+		XMMATRIX instanceScalingMX = XMMatrixScaling(4.0f, 4.0f, 4.0f);
+
+		//Rotation
+		float yRotAngle = RotYDistribution(randGen);
+		XMMATRIX instanceRotationMX = XMMatrixRotationY(XMConvertToRadians(yRotAngle));
+
+		XMMATRIX instanceTransformationMX = XMMatrixMultiply(XMMatrixMultiply(instanceScalingMX, instanceRotationMX), instanceTranslationMX);
+		XMStoreFloat4x4(&instanceData[i].WorldMX, instanceTransformationMX);
+
+		//Color
+		float xCol = ColorXDistribution(randGen);
+		float yCol = ColorYDistribution(randGen);
+		float zCol = ColorZDistribution(randGen);
+		//XMVECTOR instanceColorVec = XMVectorSet(xCol, yCol, zCol, 0.0f);
+		XMVECTOR instanceColorVec = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+		XMStoreFloat4(&instanceData[i].Color, instanceColorVec);
+	}
+	UINT InstanceVecSize = instanceData.size();
+
+	D3D11_BUFFER_DESC instanceBufferDesc;
+	ZeroMemory(&instanceBufferDesc, sizeof(instanceBufferDesc));
+	instanceBufferDesc.ByteWidth = sizeof(InstanceData) * InstanceVecSize;
+	instanceBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	instanceBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	instanceBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	D3D11_SUBRESOURCE_DATA instanceBufferInitialData;
+	ZeroMemory(&instanceBufferInitialData, sizeof(instanceBufferInitialData));
+	instanceBufferInitialData.pSysMem = &instanceData[0];
+	device->CreateBuffer(&instanceBufferDesc, &instanceBufferInitialData, instanceBuffer);
 }

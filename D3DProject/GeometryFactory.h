@@ -73,11 +73,12 @@ class GeometryFactory
 		void GenerateCube(PCMeshData& meshData);
 		void GenerateGrid(PCMeshData& meshData);
 		void GenerateStar(PCMeshData& meshData);
-		void GenerateStaticQuad(ID3D11Device* device, FMeshData& meshData);
+		void GenerateStaticQuad(ID3D11Device* device, MeshData& meshData);
 		void GenerateModel(FMeshData& meshData, string& fileName, bool UVFlag = false, bool triangulateFlag = true, bool genNormalsFlag = true,	bool sortByPrimitiveType = true, bool removeDupVertFlag = true);
-		void GenerateModelBuffers(ID3D11Device* device, FMeshData& meshData, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer);
-		void GenerateInstanceBuffer(ID3D11Device* device, std::vector<InstanceData>& instanceInfo, int numInstances, ID3D11Buffer** instanceBuffer);
+		void GenerateVertexAndIndexBuffers(ID3D11Device* device, FMeshData& meshData, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer);
+		void GenerateVertexAndIndexBuffersNon(ID3D11Device* device, MeshData& meshData, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer);
 		void GenerateBillBoards(ID3D11Device* device, ID3D11Buffer** vertexBuffer, UINT maxBillboards, float billboardSize, float xPosRange, float height, float zPosRange);
+		void GenerateInstanceBuffer(ID3D11Device* device, ID3D11Buffer** instanceBuffer, std::vector<InstanceData>& instanceData, UINT numInstances, float xPosRange, float height, float zPosRange);
 
 		random_device mRandDevice;
 };

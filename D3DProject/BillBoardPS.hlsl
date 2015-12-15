@@ -17,5 +17,7 @@ SamplerState mSampler : register(s0);
 
 float4 main(PS_IN fragmentIn) : SV_TARGET
 {
-	return mColorMap.Sample(mSampler, float2(fragmentIn.inUV.x * dataBlock1.x, fragmentIn.inUV.y * dataBlock1.y));
+	float textureU = fragmentIn.inUV.x / 2.0f;
+
+	return mColorMap.Sample(mSampler, float2(textureU + dataBlock1.x, fragmentIn.inUV.y * dataBlock1.y));
 }

@@ -18,6 +18,20 @@ struct Vertex
 	XMFLOAT3 position;
 	XMFLOAT3 normal;
 	XMFLOAT2 texCoords;
+	Vertex(){}
+
+	Vertex(const XMFLOAT3& pos, const XMFLOAT3& norm, const XMFLOAT2& uv) :
+		position(pos),
+		normal(norm),
+		texCoords(uv){}
+
+	Vertex(float px, float py, float pz,
+		float nx, float ny, float nz,
+		float u, float v) :
+		position(px, py, pz),
+		normal(nx, ny, nz),
+		texCoords(u, v){}
+
 };
 
 struct FullVertex

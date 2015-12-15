@@ -8,3 +8,7 @@
 #include "BillBoardVS.csh"
 #include "BillBoardGS.csh"
 #include "BillBoardPS.csh"
+#include "InstanceVS.csh"
+#include "InstancePS.csh"
+#include "RenderTextureVS.csh"
+#include "RenderTexturePS.csh"

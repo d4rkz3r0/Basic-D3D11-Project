@@ -22,9 +22,11 @@ public:
 private:
 	void BuildStateConfigurations();
 	void BuildGeometryAndBuffers();
+	void BuildOtherRenderTargets();
 	void CompileShaders();
 	void DefineInputLayouts();
 	void GetUserInput(float deltaTime);
+	void AnimateBillBoards(float& UVx, float& UVy, UINT flag);
 	void UpdateCamera(float deltaTime);
 	void UpdateSkybox(float deltaTime);
 	void UpdateLights(float deltaTime);
@@ -65,14 +67,17 @@ private:
 	XMMATRIX mSkyBoxScalingMX;
 	XMMATRIX mSkyBoxTransformationMX;
 	const wchar_t* mSkyBoxFileName = L"nightBox.dds";
+	const wchar_t* mSkyBox2FileName = L"dayBox.dds";
 	ID3D11Buffer* mSkyBoxVB;
 	ID3D11Buffer* mSkyBoxIB;
 	ConstantBuffer<cbPerObjectTransformation> mObjectConstBufferSB;
 	ID3D11ShaderResourceView* mSkyBoxSRV;
+	ID3D11ShaderResourceView* mSkyBox2SRV;
 
 	//Ground Quad
 	string mQuadFileName = "FloorQuad.obj";
 	const wchar_t* mQuadTextureFileName = L"catShocked.dds";
+	const wchar_t* mAltQuadTextureFileName = L"catBreathing.dds";
 	FMeshData mQuadMesh;
 	XMFLOAT4X4 mQuad;
 	XMFLOAT3X3 mQuadWorldSpaceMX;
@@ -82,6 +87,7 @@ private:
 	ID3D11Buffer* mQuadIB;
 	ConstantBuffer<cbPerObjectTransformation> mObjectConstBufferQuad;
 	ID3D11ShaderResourceView* mQuadSRV;
+	ID3D11ShaderResourceView* mAltQuadSRV;
 	
 	//Stalker
 	string mStalkerFileName = "stalkerModel.obj";
@@ -109,7 +115,7 @@ private:
 
 	//CyberDemon
 	const wchar_t* mCyberDemonTextureFileName = L"cyberDemonUVTexture.dds";
-	const int mNumOfCyberDemons = 100;
+	const int mNumOfCyberDemons = 20;
 	ID3D11Buffer* mCyberDemonVB;
 	ID3D11Buffer* mCyberDemonInstanceBuffer;
 	ID3D11ShaderResourceView* mCyberDemonSRV;
@@ -118,6 +124,35 @@ private:
 	XMMATRIX mCyberDemonTranslationMX;
 	XMMATRIX mCyberDemonTransformationMX;
 
+	// Instancing //
+	//Mario 64 Tree
+	MeshData mTreeMesh;
+	XMFLOAT4X4 mTree;
+	const wchar_t* mTreeTextureFileName = L"mario64Tree.dds";
+	const int mNumInstances = 15;
+	ID3D11Buffer* mTreeVB;
+	ID3D11Buffer* mTreeIB;
+	ID3D11Buffer* mTreeInstBuffer;
+	ID3D11ShaderResourceView* mTreeSRV;
+	vector<InstanceData> mInstancedTreeVec;
+	ConstantBuffer<cbPerObjectTransformation> mInstanceConstantBufferShaderInfo;
+
+	// RTT //
+	ID3D11Texture2D* mRenderTargetTexture;
+	ID3D11RenderTargetView* mRenderTargetRTV;
+	ID3D11ShaderResourceView* mRenderTargetSRV;
+	XMMATRIX mRenderTargetViewMX;
+	ConstantBuffer<cbPerObjectTransformation> mMiniMapConstantBufferQuadInfo;
+	MeshData mMiniMapQuad;
+	XMFLOAT4X4 mMiniMap;
+	XMMATRIX mMiniMapScalingMX;
+	XMMATRIX mMiniMapTranslationMX;
+	XMMATRIX mMiniMapTransformationMX;
+	XMMATRIX mMiniMapViewProj;
+	ID3D11Texture2D* mDepthStencilMiniMapBuffer;
+	ID3D11DepthStencilView* mDepthStencilMiniMapView;
+	ID3D11Buffer* mMiniMapVB;
+	ID3D11Buffer* mMiniMapIB;
 
 	//Materials Per Object
 	ConstantBuffer<cbPerObjectMaterial> mObjectMaterialConstBufferFactors;
@@ -130,7 +165,7 @@ private:
 	XMFLOAT4 shaderInfoDataBlock4;
 	float mUVDefaultScalar = 1.0f;
 	float mUVTiledGroundScalar = 16.0f;
-	float mUVCyberDemonBillBoardUVx = 0.5f;
+	float mUVCyberDemonBillBoardUVx = 1.0f;
 	float mUVCyberDemonBillBoardUVy = 1.0f;
 
 
@@ -140,13 +175,16 @@ private:
 	//Input Layouts
 	ID3D11InputLayout* mPosInputLayout;
 	ID3D11InputLayout* mPosColInputLayout;
-	ID3D11InputLayout* mNormVertexInputLayout;
+	ID3D11InputLayout* mVertexInputLayout;
 	ID3D11InputLayout* mFullVertexInputLayout;
 	ID3D11InputLayout* mBillBoardInputLayout;
+	ID3D11InputLayout* mInstancedInputLayout;
 	
 	//Raster and Blend States
 	ID3D11RasterizerState* mDefaultRasterState;
 	ID3D11RasterizerState* mNoCullRasterState;
+	ID3D11RasterizerState* mCWCullRasterState;
+	ID3D11RasterizerState* mCCWCullRasterState;
 	ID3D11RasterizerState* mWireFrameRasterState;
 	ID3D11BlendState* mAlphaToCoverageBlendState;
 	ID3D11BlendState* mTransparentBlendState;
@@ -154,7 +192,7 @@ private:
 	//Depth/Stencil Buffer States
 	ID3D11DepthStencilState* mLessEqualDSS;
 	//Sampler States
-	ID3D11SamplerState* mLinearSamplerState;
+	ID3D11SamplerState* mAnisoSamplerState;
 	//Shaders
 	ID3D11VertexShader* mSimpleVS;
 	ID3D11PixelShader* mSimplePS;
@@ -165,6 +203,10 @@ private:
 	ID3D11VertexShader* mBillBoardVS;
 	ID3D11GeometryShader* mBillBoardGS;
 	ID3D11PixelShader* mBillBoardPS;
+	ID3D11VertexShader* mTreeInstanceVS;
+	ID3D11PixelShader* mTreeInstancePS;
+	ID3D11VertexShader* mMiniMapVS;
+	ID3D11PixelShader* mMiniMapPS;
 
 	/////////////////////////////////////////////////////////////
 	// Win32 & Misc Variables
@@ -174,4 +216,15 @@ private:
 	//XTime
 	float angle = 0.0f;
 	float speedScalar = 2.0f;
+	//Sprite Animation
+	float mCurrTimeF = 0.0f;
+	UINT mCurrTime = 0;
+	UINT timeInterval = 2;
+	bool timeSwap = false;
+
+	//SkyBox Lerp
+	float mTimeRatio = 0.0f;
+	bool timeIncreasing = true;
+	float mAdjustedTime = 0.0f;
+	float mSkyBoxSpeedScalar = 0.25f;
 };

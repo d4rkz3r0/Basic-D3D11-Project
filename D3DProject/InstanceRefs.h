@@ -4,5 +4,6 @@ using namespace DirectX;
 
 struct InstanceData
 {
-	XMFLOAT3 pos;
+	XMFLOAT4X4 WorldMX;
+	XMFLOAT4 Color;
 };

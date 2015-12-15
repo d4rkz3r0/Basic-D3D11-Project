@@ -4,20 +4,25 @@ using namespace DirectX;
 
 /*Quick and Dirty Info
 -datablock1 - Scalars
-x - UVMultiplier for current Object
-y - 
+x - UVx Multiplier
+y - UVy Multiplier
 z - 
-w - 
+w - currentTime
 -datablock2
 x - cameraWorldPosX
 y - cameraWorldPosX
 z - cameraWorldPosX
 w -
--datablock2
+-datablock3
 x - cameraUpVecX
 y - cameraUpVecY
 z - cameraUpVecZ
 w -
+-datablock4
+x - unused
+y - unused
+z - unused
+w - unused
 
 */
 

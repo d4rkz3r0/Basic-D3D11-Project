@@ -127,6 +127,18 @@
     <FxCompile Include="BillBoardPS.hlsl">
       <Filter>Source Files\Shaders\HLSL Source</Filter>
     </FxCompile>
+    <FxCompile Include="InstanceVS.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source</Filter>
+    </FxCompile>
+    <FxCompile Include="InstancePS.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source</Filter>
+    </FxCompile>
+    <FxCompile Include="RenderTextureVS.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source</Filter>
+    </FxCompile>
+    <FxCompile Include="RenderTexturePS.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="BasicPixelShader.csh">
@@ -157,6 +169,18 @@
       <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
     </None>
     <None Include="BillBoardVS.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+    <None Include="InstanceVS.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+    <None Include="InstancePS.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+    <None Include="RenderTexturePS.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+    <None Include="RenderTextureVS.csh">
       <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
     </None>
   </ItemGroup>
