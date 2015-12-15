@@ -47,7 +47,7 @@ mVertexInputLayout(NULL)
 	XMStoreFloat4x4(&mCyberDemons, IdentityMX);
 	XMStoreFloat4x4(&mTree, IdentityMX);
 	XMStoreFloat4x4(&mMiniMap, IdentityMX);
-
+	XMStoreFloat4x4(&mSceneCube, IdentityMX);
 	//Skybox
 	mSkyBoxScalingMX = XMMatrixScaling(666.0f, 666.0f, 666.0f);
 	//Quad
@@ -60,7 +60,6 @@ mVertexInputLayout(NULL)
 	mStalkerTranslationMX = XMMatrixTranslation(-3.0f, 0.0f, 0.0f);
 	mStalkerTransformationMX = XMMatrixMultiply(mStalkerScalingMX, XMMatrixMultiply(mStalkerRotationMX, mStalkerTranslationMX));
 	XMStoreFloat4x4(&mStalker, mStalkerTransformationMX);
-
 
 
 	//Shader Info CB
@@ -127,6 +126,8 @@ D3DApp::~D3DApp()
 	SAFE_RELEASE(mMiniMapVS);
 	SAFE_RELEASE(mMiniMapPS);
 	SAFE_RELEASE(mAltQuadSRV);
+	SAFE_RELEASE(mSceneCubeVB);
+	SAFE_RELEASE(mSceneCubeIB);
 
 }
 
@@ -157,6 +158,7 @@ void D3DApp::Update(float deltaTime)
 
 	GetUserInput(deltaTime);
 	UpdateCamera(deltaTime);
+	ApplyObjectRotations();
 	UpdateSkybox(deltaTime);
 	UpdateLights(deltaTime);
 }
@@ -164,7 +166,7 @@ void D3DApp::Update(float deltaTime)
 void D3DApp::Draw()
 {	
 	float mClearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	float mMiniMapClearColor[4] = { 0.0f, 1.0f, 0.0f, 1.0f };
+	float mMiniMapClearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	float mBlendFactor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	mD3DDeviceContext->ClearRenderTargetView(mRenderTargetView, mClearColor);
 	mD3DDeviceContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -185,26 +187,6 @@ void D3DApp::Draw()
 	mObjectMaterialConstBufferFactors.Data = mPerObjectMaterialCBQD;
 	mObjectMaterialConstBufferFactors.ApplyChanges(mD3DDeviceContext);
 	auto cBufferQDMat = mObjectMaterialConstBufferFactors.Buffer();
-
-	//Cube
-	UINT stride = sizeof(PosColVertex);
-	UINT offset = 0;
-	mD3DDeviceContext->IASetInputLayout(mPosColInputLayout);
-	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	mD3DDeviceContext->IASetVertexBuffers(0, 1, &mCubeVB, &stride, &offset);
-	mD3DDeviceContext->IASetIndexBuffer(mCubeIB, DXGI_FORMAT_R32_UINT, 0);
-	mD3DDeviceContext->VSSetShader(mSimpleVS, NULL, 0);
-	mD3DDeviceContext->PSSetShader(mSimplePS, NULL, 0);
-	mWorld = XMLoadFloat4x4(&mCube);
-	mWorldViewProj = XMMatrixMultiply(mWorld, mViewProj);
-	cbPerObjectTransformation mPerObjectCB;
-	XMStoreFloat4x4(&mPerObjectCB.mWorldViewProj, mWorldViewProj);
-	mObjectConstBuffer.Data = mPerObjectCB;
-	mObjectConstBuffer.ApplyChanges(mD3DDeviceContext);
-	auto cBuffer = mObjectConstBuffer.Buffer();
-	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBuffer);
-	mD3DDeviceContext->RSSetState(mDefaultRasterState);
-	mD3DDeviceContext->DrawIndexed(cubeInfo.ibCount, 0, 0);
 
 	//SkyBox
 	UINT strideSB = sizeof(PosVertex);
@@ -372,24 +354,25 @@ void D3DApp::Draw()
 	mD3DDeviceContext->ClearDepthStencilView(mDepthStencilMiniMapView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	//Start Alternate Draw
-	//SkyBox
-	mD3DDeviceContext->IASetInputLayout(mPosInputLayout);
+	//Cube
+	UINT stride = sizeof(PosColVertex);
+	UINT offset = 0;
+	mD3DDeviceContext->IASetInputLayout(mPosColInputLayout);
 	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	mD3DDeviceContext->IASetVertexBuffers(1, 1, &mSkyBoxVB, &strideSB, &offsetSB);
-	mD3DDeviceContext->IASetIndexBuffer(mSkyBoxIB, DXGI_FORMAT_R32_UINT, 0);
-	mD3DDeviceContext->VSSetShader(mSkyBoxVS, NULL, 0);
-	mD3DDeviceContext->PSSetShader(mSkyBoxPS, NULL, 0);
-	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBufferSB);
-	mD3DDeviceContext->PSSetConstantBuffers(10, 1, &cBufferShaderMiscInfo);
-	mD3DDeviceContext->PSSetSamplers(0, 1, &mAnisoSamplerState);
-	mD3DDeviceContext->PSSetShaderResources(0, 1, &mSkyBoxSRV);
-	mD3DDeviceContext->PSSetShaderResources(1, 1, &mSkyBox2SRV);
+	mD3DDeviceContext->IASetVertexBuffers(0, 1, &mCubeVB, &stride, &offset);
+	mD3DDeviceContext->IASetIndexBuffer(mCubeIB, DXGI_FORMAT_R32_UINT, 0);
+	mD3DDeviceContext->VSSetShader(mSimpleVS, NULL, 0);
+	mD3DDeviceContext->PSSetShader(mSimplePS, NULL, 0);
+	mWorld = XMLoadFloat4x4(&mCube);
+	mWorldViewProj = XMMatrixMultiply(mWorld, mRenderTargetViewMX);
+	cbPerObjectTransformation mPerObjectCB;
+	XMStoreFloat4x4(&mPerObjectCB.mWorldViewProj, mWorldViewProj);
+	mObjectConstBuffer.Data = mPerObjectCB;
+	mObjectConstBuffer.ApplyChanges(mD3DDeviceContext);
+	auto cBuffer = mObjectConstBuffer.Buffer();
+	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBuffer);
 	mD3DDeviceContext->RSSetState(mNoCullRasterState);
-	mD3DDeviceContext->OMSetDepthStencilState(mLessEqualDSS, 0);
-	mD3DDeviceContext->DrawIndexed(skyBoxInfo.ibCount, 0, 0);
-	mD3DDeviceContext->VSSetShader(mSimpleVS, NULL, NULL);
-	mD3DDeviceContext->RSSetState(mDefaultRasterState);
-	mD3DDeviceContext->OMSetDepthStencilState(NULL, 0);
+	mD3DDeviceContext->DrawIndexed(cubeInfo.ibCount, 0, 0);
 	//GroundQuad
 	mD3DDeviceContext->IASetInputLayout(mFullVertexInputLayout);
 	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -397,7 +380,7 @@ void D3DApp::Draw()
 	mD3DDeviceContext->IASetIndexBuffer(mQuadIB, DXGI_FORMAT_R32_UINT, 0);
 	mD3DDeviceContext->VSSetShader(mTextureLightVS, NULL, 0);
 	mD3DDeviceContext->PSSetShader(mTextureLightPS, NULL, 0);
-	ShaderMiscCB.dataBlock1.x = mUVTiledGroundScalar;
+	ShaderMiscCB.dataBlock1.x = 4.0f;
 	mShaderConstantBufferInfo.Data = ShaderMiscCB;
 	mShaderConstantBufferInfo.ApplyChanges(mD3DDeviceContext);
 	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBufferQD);
@@ -410,25 +393,47 @@ void D3DApp::Draw()
 	//End Alternate Draw
 	mD3DDeviceContext->OMSetRenderTargets(1, &mRenderTargetView, mDepthStencilView);
 
-	//Mini-Map
-	UINT strideMiniMap = sizeof(Vertex);
-	UINT offsetMiniMap = 0;
-	mD3DDeviceContext->IASetInputLayout(mVertexInputLayout);
+	//Draw Scene onto a Cube
+	UINT strideSceneCube = sizeof(FullVertex);
+	UINT offsetSceneCube = 0;
+	mD3DDeviceContext->IASetInputLayout(mFullVertexInputLayout);
 	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	mD3DDeviceContext->IASetVertexBuffers(3, 1, &mMiniMapVB, &strideMiniMap, &offsetMiniMap);
-	mD3DDeviceContext->IASetIndexBuffer(mMiniMapIB, DXGI_FORMAT_R32_UINT, 0);
-	mD3DDeviceContext->VSSetShader(mMiniMapVS, NULL, 0);
-	mD3DDeviceContext->PSSetShader(mMiniMapPS, NULL, 0);
-	cbPerObjectTransformation mMiniMapCB;
-	XMStoreFloat4x4(&mMiniMapCB.mWorldViewProj, mMiniMapViewProj);
-	XMStoreFloat4x4(&mMiniMapCB.mWorldMatrix, XMMatrixIdentity());
-	mMiniMapConstantBufferQuadInfo.Data = mMiniMapCB;
-	mMiniMapConstantBufferQuadInfo.ApplyChanges(mD3DDeviceContext);
-	auto cBufferMiniMapQuad = mMiniMapConstantBufferQuadInfo.Buffer();
-	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBufferMiniMapQuad);
-	mD3DDeviceContext->PSSetSamplers(0, 1, &mAnisoSamplerState);
+	mD3DDeviceContext->IASetVertexBuffers(6, 1, &mSceneCubeVB, &strideSceneCube, &offsetSceneCube);
+	mD3DDeviceContext->IASetIndexBuffer(mSceneCubeIB, DXGI_FORMAT_R32_UINT, 0);
+	mD3DDeviceContext->VSSetShader(mTextureLightVS, NULL, 0);
+	mD3DDeviceContext->PSSetShader(mTextureLightPS, NULL, 0);
+	mWorld = XMLoadFloat4x4(&mSceneCube);
+	mWorldViewProj = XMMatrixMultiply(mWorld, mViewProj);
+	cbPerObjectTransformation mPerObjectSceneCB;
+	XMStoreFloat4x4(&mPerObjectSceneCB.mWorldViewProj, mWorldViewProj);
+	XMStoreFloat4x4(&mPerObjectSceneCB.mWorldMatrix, mWorld);
+	mObjectSceneCubeConstBuffer.Data = mPerObjectSceneCB;
+	mObjectSceneCubeConstBuffer.ApplyChanges(mD3DDeviceContext);
+	auto cSceneBuffer = mObjectSceneCubeConstBuffer.Buffer();
+	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cSceneBuffer);
 	mD3DDeviceContext->PSSetShaderResources(0, 1, &mRenderTargetSRV);
-	mD3DDeviceContext->DrawIndexed(mMiniMapQuad.Indices.size(), 0, 0);
+	mD3DDeviceContext->RSSetState(mNoCullRasterState);
+	mD3DDeviceContext->DrawIndexed(mSceneCubeInfo.mIndices.size(), 0, 0);
+
+	////Mini-Map
+	//UINT strideMiniMap = sizeof(Vertex);
+	//UINT offsetMiniMap = 0;
+	//mD3DDeviceContext->IASetInputLayout(mVertexInputLayout);
+	//mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//mD3DDeviceContext->IASetVertexBuffers(3, 1, &mMiniMapVB, &strideMiniMap, &offsetMiniMap);
+	//mD3DDeviceContext->IASetIndexBuffer(mMiniMapIB, DXGI_FORMAT_R32_UINT, 0);
+	//mD3DDeviceContext->VSSetShader(mMiniMapVS, NULL, 0);
+	//mD3DDeviceContext->PSSetShader(mMiniMapPS, NULL, 0);
+	//cbPerObjectTransformation mMiniMapCB;
+	//XMStoreFloat4x4(&mMiniMapCB.mWorldViewProj, mMiniMapViewProj);
+	//XMStoreFloat4x4(&mMiniMapCB.mWorldMatrix, XMMatrixIdentity());
+	//mMiniMapConstantBufferQuadInfo.Data = mMiniMapCB;
+	//mMiniMapConstantBufferQuadInfo.ApplyChanges(mD3DDeviceContext);
+	//auto cBufferMiniMapQuad = mMiniMapConstantBufferQuadInfo.Buffer();
+	//mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBufferMiniMapQuad);
+	//mD3DDeviceContext->PSSetSamplers(0, 1, &mAnisoSamplerState);
+	//mD3DDeviceContext->PSSetShaderResources(0, 1, &mRenderTargetSRV);
+	//mD3DDeviceContext->DrawIndexed(mMiniMapQuad.Indices.size(), 0, 0);
 
 
 
@@ -505,8 +510,16 @@ void D3DApp::BuildGeometryAndBuffers()
 	GeoFactory.GenerateVertexAndIndexBuffersNon(mD3DDevice, mMiniMapQuad, &mMiniMapVB, &mMiniMapIB);
 	mMiniMapConstantBufferQuadInfo.Initialize(mD3DDevice);
 
+	//Scene Cube
+	GeoFactory.GenerateModel(mSceneCubeInfo, mSceneCubeFileName, false, true, true, false, false);
+	GeoFactory.GenerateVertexAndIndexBuffers(mD3DDevice, mSceneCubeInfo, &mSceneCubeVB, &mSceneCubeIB);
+	mObjectSceneCubeConstBuffer.Initialize(mD3DDevice);
+
 	//Shader Misc
 	mShaderConstantBufferInfo.Initialize(mD3DDevice);
+
+	
+
 }
 
 void D3DApp::BuildOtherRenderTargets()
@@ -626,6 +639,7 @@ void D3DApp::DefineInputLayouts()
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 3, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 	mD3DDevice->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), RenderTextureVS, sizeof(RenderTextureVS), &mVertexInputLayout);
+
 
 	D3D11_INPUT_ELEMENT_DESC instanceBufferDesc[]
 	{
@@ -806,31 +820,74 @@ void D3DApp::GetUserInput(float deltaTime)
 	{
 		MsgProc(mMainWnd, WM_DESTROY, NULL, NULL);
 	}
-	if (GetAsyncKeyState(VK_NUMPAD8) && 0x8000)
+	if (GetAsyncKeyState(VK_TAB) & 0x8000)
 	{
-		mCurrPointLightPosZ += (mPointLightScalar * deltaTime);
+		if (lightFlag == 2)
+		{
+			lightFlag = 0;
+		}
+		else
+		{
+			lightFlag += 1;
+
+		}
 	}
-	if (GetAsyncKeyState(VK_NUMPAD5) && 0x8000)
+	// 0 - Point Light Control
+	if (lightFlag == 0)
 	{
-		mCurrPointLightPosZ += (-mPointLightScalar * deltaTime);
+		if (GetAsyncKeyState(VK_NUMPAD8) && 0x8000)
+		{
+			mCurrPointLightPosZ += (mPointLightScalar * deltaTime);
+		}
+		if (GetAsyncKeyState(VK_NUMPAD5) && 0x8000)
+		{
+			mCurrPointLightPosZ += (-mPointLightScalar * deltaTime);
+		}
+		if (GetAsyncKeyState(VK_NUMPAD4) && 0x8000)
+		{
+			mCurrPointLightPosX += (-mPointLightScalar * deltaTime);
+		}
+		if (GetAsyncKeyState(VK_NUMPAD6) && 0x8000)
+		{
+			mCurrPointLightPosX += (mPointLightScalar * deltaTime);
+		}
+		if (GetAsyncKeyState(VK_NUMPAD7) && 0x8000)
+		{
+			mCurrPointLightPosY += (-mPointLightScalar * deltaTime);
+		}
+		if (GetAsyncKeyState(VK_NUMPAD9) && 0x8000)
+		{
+			mCurrPointLightPosY += (mPointLightScalar * deltaTime);
+		}
 	}
-	if (GetAsyncKeyState(VK_NUMPAD4) && 0x8000)
+	// 0 - Directional Light Control
+	else if (lightFlag == 1)
 	{
-		mCurrPointLightPosX += (-mPointLightScalar * deltaTime);
+		if (GetAsyncKeyState(VK_NUMPAD8) && 0x8000)
+		{
+			mCurrDirLightDirZ += (mDirLightScalar * deltaTime);
+		}
+		if (GetAsyncKeyState(VK_NUMPAD5) && 0x8000)
+		{
+			mCurrDirLightDirZ += (-mDirLightScalar * deltaTime);
+		}
+		if (GetAsyncKeyState(VK_NUMPAD4) && 0x8000)
+		{
+			mCurrDirLightDirX += (-mDirLightScalar * deltaTime);
+		}
+		if (GetAsyncKeyState(VK_NUMPAD6) && 0x8000)
+		{
+			mCurrDirLightDirX += (mDirLightScalar * deltaTime);
+		}
+		if (GetAsyncKeyState(VK_NUMPAD7) && 0x8000)
+		{
+			mCurrDirLightDirY += (-mDirLightScalar * deltaTime);
+		}
+		if (GetAsyncKeyState(VK_NUMPAD9) && 0x8000)
+		{
+			mCurrDirLightDirY += (mDirLightScalar * deltaTime);
+		}
 	}
-	if (GetAsyncKeyState(VK_NUMPAD6) && 0x8000)
-	{
-		mCurrPointLightPosX += (mPointLightScalar * deltaTime);
-	}
-	if (GetAsyncKeyState(VK_NUMPAD7) && 0x8000)
-	{
-		mCurrPointLightPosY += (-mPointLightScalar * deltaTime);
-	}
-	if (GetAsyncKeyState(VK_NUMPAD9) && 0x8000)
-	{
-		mCurrPointLightPosY += (mPointLightScalar * deltaTime);
-	}
-	
 }
 
 void D3DApp::AnimateBillBoards(float& UVx, float& UVy, UINT flag)
@@ -875,6 +932,15 @@ void D3DApp::AnimateBillBoards(float& UVx, float& UVy, UINT flag)
 	}
 }
 
+void D3DApp::ApplyObjectRotations()
+{
+	//Scene Cube
+	mSceneCubeScalingMX = XMMatrixScaling(5.0f, 5.0f, 5.0f);
+	mSceneCubeRotationMX = XMMatrixRotationY(XMConvertToRadians(-GetAngle(mTimer.SmoothDelta())));
+	mSceneCubeTranslationMX = XMMatrixTranslationFromVector(XMVectorSet(15.0f, 5.25f, 15.0f, 1.0f));
+	mSceneCubeTransformationMX = XMMatrixMultiply(mSceneCubeScalingMX, XMMatrixMultiply(mSceneCubeRotationMX, mSceneCubeTranslationMX));
+	XMStoreFloat4x4(&mSceneCube, mSceneCubeTransformationMX);
+}
 void D3DApp::UpdateCamera(float deltaTime)
 {
 	mCamera.UpdateViewMatrix();
@@ -926,11 +992,11 @@ void D3DApp::UpdateLights(float deltaTime)
 	mObjectMaterialConstBufferFactors.Data.Specular = XMFLOAT4(0.75f, 0.75f, 0.75f, 256.0f);
 	mObjectMaterialConstBufferFactors.Data.Reflect = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 
-	//Directional Light
+	//Directional Light - Num-pad Controlled
 	mDirectionalLightInfo.Data.Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
 	mDirectionalLightInfo.Data.Diffuse = ManualColors::White;
 	mDirectionalLightInfo.Data.Specular = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
-	mDirectionalLightInfo.Data.Direction = XMFLOAT3(0.0f, -0.25, 0.0f);
+	mDirectionalLightInfo.Data.Direction = XMFLOAT3(mCurrDirLightDirX, mCurrDirLightDirY, mCurrDirLightDirZ);
 
 	//Point Light - Num-pad Controlled
 	mPointLightInfo.Data.Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);

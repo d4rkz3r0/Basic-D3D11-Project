@@ -27,6 +27,7 @@ private:
 	void DefineInputLayouts();
 	void GetUserInput(float deltaTime);
 	void AnimateBillBoards(float& UVx, float& UVy, UINT flag);
+	void ApplyObjectRotations();
 	void UpdateCamera(float deltaTime);
 	void UpdateSkybox(float deltaTime);
 	void UpdateLights(float deltaTime);
@@ -105,6 +106,7 @@ private:
 	ID3D11ShaderResourceView* mStalkerSRV;
 
 	//Lights
+	UINT lightFlag = 0; 
 	ConstantBuffer<DirectionalLight> mDirectionalLightInfo;
 	ConstantBuffer<PointLight> mPointLightInfo;
 	ConstantBuffer<SpotLight> mSpotLightInfo;
@@ -112,6 +114,11 @@ private:
 	float mCurrPointLightPosY = 1.0f;
 	float mCurrPointLightPosZ = 0.0f;
 	float mPointLightScalar = 20.0f;
+
+	float mCurrDirLightDirX = 0.0f;
+	float mCurrDirLightDirY = -0.25f;
+	float mCurrDirLightDirZ = 0.0f;
+	float mDirLightScalar = 10.0f;
 
 	//CyberDemon
 	const wchar_t* mCyberDemonTextureFileName = L"cyberDemonUVTexture.dds";
@@ -153,6 +160,18 @@ private:
 	ID3D11DepthStencilView* mDepthStencilMiniMapView;
 	ID3D11Buffer* mMiniMapVB;
 	ID3D11Buffer* mMiniMapIB;
+
+	//Scene Cube
+	FMeshData mSceneCubeInfo;
+	string mSceneCubeFileName = "sceneCube.obj";
+	XMFLOAT4X4 mSceneCube;
+	ID3D11Buffer* mSceneCubeVB;
+	ID3D11Buffer* mSceneCubeIB;
+	ConstantBuffer<cbPerObjectTransformation> mObjectSceneCubeConstBuffer;
+	XMMATRIX mSceneCubeScalingMX;
+	XMMATRIX mSceneCubeRotationMX;
+	XMMATRIX mSceneCubeTranslationMX;
+	XMMATRIX mSceneCubeTransformationMX;
 
 	//Materials Per Object
 	ConstantBuffer<cbPerObjectMaterial> mObjectMaterialConstBufferFactors;
@@ -215,7 +234,7 @@ private:
 	POINT mPrevMousePos;
 	//XTime
 	float angle = 0.0f;
-	float speedScalar = 2.0f;
+	float speedScalar = 5.0f;
 	//Sprite Animation
 	float mCurrTimeF = 0.0f;
 	UINT mCurrTime = 0;
