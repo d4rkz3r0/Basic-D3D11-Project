@@ -46,7 +46,7 @@ mVertexInputLayout(NULL)
 	XMStoreFloat4x4(&mStalker, IdentityMX);
 	XMStoreFloat4x4(&mCyberDemons, IdentityMX);
 	XMStoreFloat4x4(&mTree, IdentityMX);
-	XMStoreFloat4x4(&mMiniMap, IdentityMX);
+//	XMStoreFloat4x4(&mMiniMap, IdentityMX);
 	XMStoreFloat4x4(&mSceneCube, IdentityMX);
 	//Skybox
 	mSkyBoxScalingMX = XMMatrixScaling(666.0f, 666.0f, 666.0f);
@@ -116,10 +116,10 @@ D3DApp::~D3DApp()
 	SAFE_RELEASE(mTreeInstanceVS);
 	SAFE_RELEASE(mTreeInstancePS);
 	SAFE_RELEASE(mSkyBox2SRV);
-	SAFE_RELEASE(mMiniMapVB);
-	SAFE_RELEASE(mMiniMapIB);
-	SAFE_RELEASE(mDepthStencilMiniMapBuffer);
-	SAFE_RELEASE(mDepthStencilMiniMapView);
+	SAFE_RELEASE(mFullScreenQuadVB);
+	SAFE_RELEASE(mFullScreenQuadIB);
+	SAFE_RELEASE(mRenderTargetDepthStencilBuffer);
+	SAFE_RELEASE(mRenderTargetDSV);
 	SAFE_RELEASE(mRenderTargetTexture);
 	SAFE_RELEASE(mRenderTargetRTV);
 	SAFE_RELEASE(mRenderTargetSRV);
@@ -158,7 +158,7 @@ void D3DApp::Update(float deltaTime)
 
 	GetUserInput(deltaTime);
 	UpdateCamera(deltaTime);
-	ApplyObjectRotations();
+	SceneCubeUpdate();
 	UpdateSkybox(deltaTime);
 	UpdateLights(deltaTime);
 }
@@ -342,37 +342,35 @@ void D3DApp::Draw()
 	mShaderConstantBufferInfo.Data = ShaderMiscCB;
 	mShaderConstantBufferInfo.ApplyChanges(mD3DDeviceContext);
 	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBufferInstance);
-	mD3DDeviceContext->PSSetConstantBuffers(10, 1, &cBufferShaderMiscInfo);
 	mD3DDeviceContext->PSSetSamplers(0, 1, &mAnisoSamplerState);
 	mD3DDeviceContext->PSSetShaderResources(0, 1, &mTreeSRV);
 	mD3DDeviceContext->RSSetState(mNoCullRasterState);
 	mD3DDeviceContext->DrawIndexedInstanced(mTreeMesh.Indices.size(), mNumInstances, 0, 0, 0);
 
-	//Switch To Mini-Map Render Target
+	//Switch To SceneCube's RenderTarget
+	mD3DDeviceContext->RSSetViewports(1, &mRenderTargetViewPort);
 	mD3DDeviceContext->OMSetRenderTargets(1, &mRenderTargetRTV, NULL);
 	mD3DDeviceContext->ClearRenderTargetView(mRenderTargetRTV, mMiniMapClearColor);
-	mD3DDeviceContext->ClearDepthStencilView(mDepthStencilMiniMapView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
+	mD3DDeviceContext->ClearDepthStencilView(mRenderTargetDSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	//Start Alternate Draw
-	//Cube
-	UINT stride = sizeof(PosColVertex);
-	UINT offset = 0;
-	mD3DDeviceContext->IASetInputLayout(mPosColInputLayout);
+	//SkyBox
+	mD3DDeviceContext->IASetInputLayout(mPosInputLayout);
 	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	mD3DDeviceContext->IASetVertexBuffers(0, 1, &mCubeVB, &stride, &offset);
-	mD3DDeviceContext->IASetIndexBuffer(mCubeIB, DXGI_FORMAT_R32_UINT, 0);
-	mD3DDeviceContext->VSSetShader(mSimpleVS, NULL, 0);
-	mD3DDeviceContext->PSSetShader(mSimplePS, NULL, 0);
-	mWorld = XMLoadFloat4x4(&mCube);
-	mWorldViewProj = XMMatrixMultiply(mWorld, mRenderTargetViewMX);
-	cbPerObjectTransformation mPerObjectCB;
-	XMStoreFloat4x4(&mPerObjectCB.mWorldViewProj, mWorldViewProj);
-	mObjectConstBuffer.Data = mPerObjectCB;
-	mObjectConstBuffer.ApplyChanges(mD3DDeviceContext);
-	auto cBuffer = mObjectConstBuffer.Buffer();
-	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBuffer);
+	mD3DDeviceContext->IASetVertexBuffers(1, 1, &mSkyBoxVB, &strideSB, &offsetSB);
+	mD3DDeviceContext->IASetIndexBuffer(mSkyBoxIB, DXGI_FORMAT_R32_UINT, 0);
+	mD3DDeviceContext->VSSetShader(mSkyBoxVS, NULL, 0);
+	mD3DDeviceContext->PSSetShader(mSkyBoxPS, NULL, 0);
+	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBufferSB);
+	mD3DDeviceContext->PSSetConstantBuffers(10, 1, &cBufferShaderMiscInfo);
+	mD3DDeviceContext->PSSetSamplers(0, 1, &mAnisoSamplerState);
+	mD3DDeviceContext->PSSetShaderResources(0, 1, &mSkyBoxSRV);
+	mD3DDeviceContext->PSSetShaderResources(1, 1, &mSkyBox2SRV);
 	mD3DDeviceContext->RSSetState(mNoCullRasterState);
-	mD3DDeviceContext->DrawIndexed(cubeInfo.ibCount, 0, 0);
+	mD3DDeviceContext->OMSetDepthStencilState(mLessEqualDSS, 0);
+	mD3DDeviceContext->DrawIndexed(skyBoxInfo.ibCount, 0, 0);
+	mD3DDeviceContext->VSSetShader(mSimpleVS, NULL, NULL);
+	mD3DDeviceContext->RSSetState(mDefaultRasterState);
+	mD3DDeviceContext->OMSetDepthStencilState(NULL, 0);
 	//GroundQuad
 	mD3DDeviceContext->IASetInputLayout(mFullVertexInputLayout);
 	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -380,7 +378,7 @@ void D3DApp::Draw()
 	mD3DDeviceContext->IASetIndexBuffer(mQuadIB, DXGI_FORMAT_R32_UINT, 0);
 	mD3DDeviceContext->VSSetShader(mTextureLightVS, NULL, 0);
 	mD3DDeviceContext->PSSetShader(mTextureLightPS, NULL, 0);
-	ShaderMiscCB.dataBlock1.x = 4.0f;
+	ShaderMiscCB.dataBlock1.x = 3.0f;
 	mShaderConstantBufferInfo.Data = ShaderMiscCB;
 	mShaderConstantBufferInfo.ApplyChanges(mD3DDeviceContext);
 	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBufferQD);
@@ -391,9 +389,11 @@ void D3DApp::Draw()
 	mD3DDeviceContext->RSSetState(mNoCullRasterState);
 	mD3DDeviceContext->DrawIndexed(mQuadMesh.mIndices.size(), 0, 0);
 	//End Alternate Draw
+	//Switch Back To BackBuffer
+	mD3DDeviceContext->RSSetViewports(1, &mViewPort);
 	mD3DDeviceContext->OMSetRenderTargets(1, &mRenderTargetView, mDepthStencilView);
 
-	//Draw Scene onto a Cube
+	//Scene Cube
 	UINT strideSceneCube = sizeof(FullVertex);
 	UINT offsetSceneCube = 0;
 	mD3DDeviceContext->IASetInputLayout(mFullVertexInputLayout);
@@ -402,6 +402,9 @@ void D3DApp::Draw()
 	mD3DDeviceContext->IASetIndexBuffer(mSceneCubeIB, DXGI_FORMAT_R32_UINT, 0);
 	mD3DDeviceContext->VSSetShader(mTextureLightVS, NULL, 0);
 	mD3DDeviceContext->PSSetShader(mTextureLightPS, NULL, 0);
+	ShaderMiscCB.dataBlock1.x = 1.0f;
+	mShaderConstantBufferInfo.Data = ShaderMiscCB;
+	mShaderConstantBufferInfo.ApplyChanges(mD3DDeviceContext);
 	mWorld = XMLoadFloat4x4(&mSceneCube);
 	mWorldViewProj = XMMatrixMultiply(mWorld, mViewProj);
 	cbPerObjectTransformation mPerObjectSceneCB;
@@ -411,9 +414,18 @@ void D3DApp::Draw()
 	mObjectSceneCubeConstBuffer.ApplyChanges(mD3DDeviceContext);
 	auto cSceneBuffer = mObjectSceneCubeConstBuffer.Buffer();
 	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cSceneBuffer);
+	mD3DDeviceContext->PSSetConstantBuffers(10, 1, &cBufferShaderMiscInfo);
 	mD3DDeviceContext->PSSetShaderResources(0, 1, &mRenderTargetSRV);
 	mD3DDeviceContext->RSSetState(mNoCullRasterState);
 	mD3DDeviceContext->DrawIndexed(mSceneCubeInfo.mIndices.size(), 0, 0);
+
+	//Switch To Full Screen Quad's Render Target
+	mD3DDeviceContext->OMSetRenderTargets(1, &mFullScreenQuadRTV, mDepthStencilView);
+	mD3DDeviceContext->ClearRenderTargetView(mOffscreenRTV, reinterpret_cast<const float*>(&Colors::Silver));
+	mD3DDeviceContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	mD3DDeviceContext->OMSetRenderTargets(1, &mRenderTargetRTV, NULL);
+	mD3DDeviceContext->ClearRenderTargetView(mRenderTargetRTV, mMiniMapClearColor);
+	mD3DDeviceContext->ClearDepthStencilView(mDepthStencilMiniMapView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	////Mini-Map
 	//UINT strideMiniMap = sizeof(Vertex);
@@ -432,7 +444,7 @@ void D3DApp::Draw()
 	//auto cBufferMiniMapQuad = mMiniMapConstantBufferQuadInfo.Buffer();
 	//mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBufferMiniMapQuad);
 	//mD3DDeviceContext->PSSetSamplers(0, 1, &mAnisoSamplerState);
-	//mD3DDeviceContext->PSSetShaderResources(0, 1, &mRenderTargetSRV);
+	//mD3DDeviceContext->PSSetShaderResources(0, 1, &mRenderTargetView);
 	//mD3DDeviceContext->DrawIndexed(mMiniMapQuad.Indices.size(), 0, 0);
 
 
@@ -505,30 +517,31 @@ void D3DApp::BuildGeometryAndBuffers()
 	GeoFactory.GenerateInstanceBuffer(mD3DDevice, &mTreeInstBuffer, mInstancedTreeVec, mNumInstances, 50.0f, 4.0f, 50.0f);
 	mInstanceConstantBufferShaderInfo.Initialize(mD3DDevice);
 
-	//Mini Map 
-	GeoFactory.GenerateStaticQuad(mD3DDevice, mMiniMapQuad);
-	GeoFactory.GenerateVertexAndIndexBuffersNon(mD3DDevice, mMiniMapQuad, &mMiniMapVB, &mMiniMapIB);
-	mMiniMapConstantBufferQuadInfo.Initialize(mD3DDevice);
-
 	//Scene Cube
 	GeoFactory.GenerateModel(mSceneCubeInfo, mSceneCubeFileName, false, true, true, false, false);
 	GeoFactory.GenerateVertexAndIndexBuffers(mD3DDevice, mSceneCubeInfo, &mSceneCubeVB, &mSceneCubeIB);
 	mObjectSceneCubeConstBuffer.Initialize(mD3DDevice);
 
+	//FullScreen Quad
+	GeoFactory.GenerateFullscreenQuad(mD3DDevice, mFullScreenQuadInfo, &mFullScreenQuadVB, &mFullScreenQuadIB);
+	mFullScreenQuadConstBuffer.Initialize(mD3DDevice);
+
+
+
+
+
+
 	//Shader Misc
 	mShaderConstantBufferInfo.Initialize(mD3DDevice);
-
-	
-
 }
 
 void D3DApp::BuildOtherRenderTargets()
 {
-	//RTT Textures and Resource Views
+	//Scene Cube Texture, RTV, SRV, DSV, Viewport
 	D3D11_TEXTURE2D_DESC renderTargetTextureDesc;
 	ZeroMemory(&renderTargetTextureDesc, sizeof(renderTargetTextureDesc));
 	renderTargetTextureDesc.Width = mWindowWidth;
-	renderTargetTextureDesc.Height = mWindowHeight / 2;
+	renderTargetTextureDesc.Height = mWindowHeight;
 	renderTargetTextureDesc.MipLevels = 1;
 	renderTargetTextureDesc.ArraySize = 1;
 	renderTargetTextureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -539,7 +552,6 @@ void D3DApp::BuildOtherRenderTargets()
 	renderTargetTextureDesc.CPUAccessFlags = 0;
 	renderTargetTextureDesc.MiscFlags = 0;
 	mD3DDevice->CreateTexture2D(&renderTargetTextureDesc, NULL, &mRenderTargetTexture);
-
 
 	D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
 	ZeroMemory(&renderTargetViewDesc, sizeof(renderTargetViewDesc));
@@ -559,7 +571,7 @@ void D3DApp::BuildOtherRenderTargets()
 	D3D11_TEXTURE2D_DESC depthStencilTextureDesc;
 	ZeroMemory(&depthStencilTextureDesc, sizeof(depthStencilTextureDesc));
 	depthStencilTextureDesc.Width = mWindowWidth;
-	depthStencilTextureDesc.Height = mWindowHeight / 2;
+	depthStencilTextureDesc.Height = mWindowHeight;
 	depthStencilTextureDesc.MipLevels = 1;
 	depthStencilTextureDesc.ArraySize = 1;
 	depthStencilTextureDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -569,26 +581,31 @@ void D3DApp::BuildOtherRenderTargets()
 	depthStencilTextureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	depthStencilTextureDesc.CPUAccessFlags = 0;
 	depthStencilTextureDesc.MiscFlags = 0;
-	mD3DDevice->CreateTexture2D(&depthStencilTextureDesc, NULL, &mDepthStencilMiniMapBuffer);
-	mD3DDevice->CreateDepthStencilView(mDepthStencilMiniMapBuffer, 0, &mDepthStencilMiniMapView);
+	mD3DDevice->CreateTexture2D(&depthStencilTextureDesc, NULL, &mRenderTargetDepthStencilBuffer);
+	mD3DDevice->CreateDepthStencilView(mRenderTargetDepthStencilBuffer, 0, &mRenderTargetDSV);
 
-	//RTT View Matrix Setup
-	XMVECTOR mapCamPosition = mCamera.GetPositionXM();
-	XMVECTOR mapCamTarget = XMVectorSet(XMVectorGetX(mCamera.GetLookXM()),
-		XMVectorGetY(mCamera.GetLookXM()), XMVectorGetZ(mCamera.GetLookXM()),
-		XMVectorGetW(mCamera.GetLookXM()));
-//	XMVECTOR mapCamTarget = XMVectorNegate(mCamera.GetPositionXM());
+	mRenderTargetViewPort.Width = static_cast<float>(mWindowWidth);
+	mRenderTargetViewPort.Height = static_cast<float>(mWindowHeight);
+	mRenderTargetViewPort.TopLeftX = 0.0f;
+	mRenderTargetViewPort.TopLeftY = 0.0f;
+	mRenderTargetViewPort.MinDepth = 0.0f;
+	mRenderTargetViewPort.MaxDepth = 1.0f;
 
-	XMVECTOR mapCamUp = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-	mRenderTargetViewMX = XMMatrixLookAtLH(mapCamPosition, mapCamTarget, mapCamUp);
-//	mMiniMapViewProj = mRenderTargetViewMX;
+	//Full Screen Quad, RTV, SRV, DSV, Viewport
+	////RTT View Matrix Setup
+	//XMVECTOR mapCamPosition = mCamera.GetPositionXM();
+	//XMVECTOR mapCamTarget = mCamera.GetLookXM();
+	//XMVECTOR mapCamUp = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+	//mRenderTargetViewMX = XMMatrixLookAtLH(mapCamPosition, mapCamTarget, mapCamUp);
 
-	//RTT VP MXs
-	mMiniMapScalingMX = XMMatrixScaling(1.0f, 0.5f, 0.0f);
-	mMiniMapTranslationMX = XMMatrixTranslation(0.0f, -0.5f, 0.0f);
-	mMiniMapTransformationMX = XMMatrixMultiply(mMiniMapScalingMX, mMiniMapTranslationMX);
-	mMiniMapViewProj = mMiniMapTransformationMX; //* mRenderTargetViewMX;
-	//mMiniMapViewProj = XMMatrixMultiply(mMiniMapTransformationMX, mRenderTargetViewMX);
+	////RTT VP MXs
+	//mMiniMapScalingMX = XMMatrixScaling(1.0f, 1.0f, 0.0f);
+	//mMiniMapTranslationMX = XMMatrixTranslation(0.0f, 0.0f, 0.0f);
+	//mMiniMapTransformationMX = XMMatrixMultiply(mMiniMapScalingMX, mMiniMapTranslationMX);
+	//mMiniMapViewProj = mMiniMapTransformationMX;
+
+
+
 
 }
 
@@ -932,11 +949,11 @@ void D3DApp::AnimateBillBoards(float& UVx, float& UVy, UINT flag)
 	}
 }
 
-void D3DApp::ApplyObjectRotations()
+void D3DApp::SceneCubeUpdate()
 {
 	//Scene Cube
 	mSceneCubeScalingMX = XMMatrixScaling(5.0f, 5.0f, 5.0f);
-	mSceneCubeRotationMX = XMMatrixRotationY(XMConvertToRadians(-GetAngle(mTimer.SmoothDelta())));
+	mSceneCubeRotationMX = XMMatrixRotationY(XMConvertToRadians(-GetAngle(static_cast<float>(mTimer.SmoothDelta()))));
 	mSceneCubeTranslationMX = XMMatrixTranslationFromVector(XMVectorSet(15.0f, 5.25f, 15.0f, 1.0f));
 	mSceneCubeTransformationMX = XMMatrixMultiply(mSceneCubeScalingMX, XMMatrixMultiply(mSceneCubeRotationMX, mSceneCubeTranslationMX));
 	XMStoreFloat4x4(&mSceneCube, mSceneCubeTransformationMX);

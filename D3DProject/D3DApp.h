@@ -25,9 +25,9 @@ private:
 	void BuildOtherRenderTargets();
 	void CompileShaders();
 	void DefineInputLayouts();
+	void SceneCubeUpdate();
 	void GetUserInput(float deltaTime);
 	void AnimateBillBoards(float& UVx, float& UVy, UINT flag);
-	void ApplyObjectRotations();
 	void UpdateCamera(float deltaTime);
 	void UpdateSkybox(float deltaTime);
 	void UpdateLights(float deltaTime);
@@ -147,19 +147,11 @@ private:
 	// RTT //
 	ID3D11Texture2D* mRenderTargetTexture;
 	ID3D11RenderTargetView* mRenderTargetRTV;
+	ID3D11DepthStencilView* mRenderTargetDSV;
 	ID3D11ShaderResourceView* mRenderTargetSRV;
-	XMMATRIX mRenderTargetViewMX;
-	ConstantBuffer<cbPerObjectTransformation> mMiniMapConstantBufferQuadInfo;
-	MeshData mMiniMapQuad;
-	XMFLOAT4X4 mMiniMap;
-	XMMATRIX mMiniMapScalingMX;
-	XMMATRIX mMiniMapTranslationMX;
-	XMMATRIX mMiniMapTransformationMX;
-	XMMATRIX mMiniMapViewProj;
-	ID3D11Texture2D* mDepthStencilMiniMapBuffer;
-	ID3D11DepthStencilView* mDepthStencilMiniMapView;
-	ID3D11Buffer* mMiniMapVB;
-	ID3D11Buffer* mMiniMapIB;
+	ID3D11Texture2D* mRenderTargetDepthStencilBuffer;
+	D3D11_VIEWPORT mRenderTargetViewPort;
+
 
 	//Scene Cube
 	FMeshData mSceneCubeInfo;
@@ -172,6 +164,25 @@ private:
 	XMMATRIX mSceneCubeRotationMX;
 	XMMATRIX mSceneCubeTranslationMX;
 	XMMATRIX mSceneCubeTransformationMX;
+	
+	//Full Screen Quad (Post Processing)
+	FMeshData mFullScreenQuadInfo;
+	ID3D11Buffer* mFullScreenQuadVB;
+	ID3D11Buffer* mFullScreenQuadIB;
+	ConstantBuffer<cbPerObjectTransformation> mFullScreenQuadConstBuffer;
+	ID3D11RenderTargetView* mFullScreenQuadRTV;
+	ID3D11DepthStencilView* mullScreenQuadDSV;
+	ID3D11Texture2D* mFullScreenQuadDepthStencilBuffer;
+	D3D11_VIEWPORT mFullScreenQuadViewPort;
+
+	/*XMMATRIX mFullScreenQuadViewMX;
+	XMFLOAT4X4 mFullScreenQuad;
+	XMMATRIX mFullScreenQuadScalingMX;
+	XMMATRIX mFullScreenQuadTranslationMX;
+	XMMATRIX mFullScreenQuadTransformationMX;
+	XMMATRIX mFullScreenQuadViewProj;
+	*/
+	
 
 	//Materials Per Object
 	ConstantBuffer<cbPerObjectMaterial> mObjectMaterialConstBufferFactors;
