@@ -98,6 +98,9 @@
     <Filter Include="Source Files\Instancing">
       <UniqueIdentifier>{caf12eff-32ab-42f5-9b03-29d225b683e4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Shaders\HLSL Source\PostProcessEffects">
+      <UniqueIdentifier>{dda4abea-d109-4854-8b2d-09b6df0e5b96}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="BasicPixelShader.hlsl">
@@ -139,6 +142,18 @@
     <FxCompile Include="RenderTexturePS.hlsl">
       <Filter>Source Files\Shaders\HLSL Source</Filter>
     </FxCompile>
+    <FxCompile Include="GrayScaleFilter.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source\PostProcessEffects</Filter>
+    </FxCompile>
+    <FxCompile Include="SepiaFilter.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source\PostProcessEffects</Filter>
+    </FxCompile>
+    <FxCompile Include="InverseFilter.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source\PostProcessEffects</Filter>
+    </FxCompile>
+    <FxCompile Include="BlurFilter.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source\PostProcessEffects</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="BasicPixelShader.csh">
@@ -157,9 +172,6 @@
       <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
     </None>
     <None Include="TextureLightingVS.csh">
-      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
-    </None>
-    <None Include="InstancingVS.csh">
       <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
     </None>
     <None Include="BillBoardGS.csh">
@@ -181,6 +193,18 @@
       <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
     </None>
     <None Include="RenderTextureVS.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+    <None Include="GrayScaleFilter.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+    <None Include="SepiaFilter.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+    <None Include="InverseFilter.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+    <None Include="BlurFilter.csh">
       <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
     </None>
   </ItemGroup>

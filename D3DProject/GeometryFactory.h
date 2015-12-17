@@ -79,7 +79,7 @@ class GeometryFactory
 		void GenerateVertexAndIndexBuffersNon(ID3D11Device* device, MeshData& meshData, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer);
 		void GenerateBillBoards(ID3D11Device* device, ID3D11Buffer** vertexBuffer, UINT maxBillboards, float billboardSize, float xPosRange, float height, float zPosRange);
 		void GenerateInstanceBuffer(ID3D11Device* device, ID3D11Buffer** instanceBuffer, std::vector<InstanceData>& instanceData, UINT numInstances, float xPosRange, float height, float zPosRange);
-		void GenerateFullscreenQuad(ID3D11Device* device, FMeshData& meshData, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer);
+		void GenerateFullscreenQuad(ID3D11Device* device, MeshData& meshData, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer);
 
 		random_device mRandDevice;
 };

@@ -524,62 +524,58 @@ void GeometryFactory::GenerateInstanceBuffer(ID3D11Device* device, ID3D11Buffer*
 	device->CreateBuffer(&instanceBufferDesc, &instanceBufferInitialData, instanceBuffer);
 }
 
-void GeometryFactory::GenerateFullscreenQuad(ID3D11Device* device, FMeshData& meshData, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer)
+void GeometryFactory::GenerateFullscreenQuad(ID3D11Device* device, MeshData& meshData, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer)
 {
-	meshData.mVertices.resize(4);
-	meshData.mIndices.resize(6);
+	meshData.Vertices.resize(4);
+	meshData.Indices.resize(6);
 
 	// Position coordinates specified in NDC space.
-	meshData.mVertices[0] = FullVertex(
+	meshData.Vertices[0] = Vertex(
 		-1.0f, -1.0f, 0.0f,
 		0.0f, 0.0f, -1.0f,
-		1.0f, 0.0f, 0.0f,
 		0.0f, 1.0f);
 
-	meshData.mVertices[1] = FullVertex(
+	meshData.Vertices[1] = Vertex(
 		-1.0f, +1.0f, 0.0f,
 		0.0f, 0.0f, -1.0f,
-		1.0f, 0.0f, 0.0f,
 		0.0f, 0.0f);
 
-	meshData.mVertices[2] = FullVertex(
+	meshData.Vertices[2] = Vertex(
 		+1.0f, +1.0f, 0.0f,
 		0.0f, 0.0f, -1.0f,
-		1.0f, 0.0f, 0.0f,
 		1.0f, 0.0f);
 
-	meshData.mVertices[3] = FullVertex(
+	meshData.Vertices[3] = Vertex(
 		+1.0f, -1.0f, 0.0f,
 		0.0f, 0.0f, -1.0f,
-		1.0f, 0.0f, 0.0f,
 		1.0f, 1.0f);
 
-	meshData.mIndices[0] = 0;
-	meshData.mIndices[1] = 1;
-	meshData.mIndices[2] = 2;
+	meshData.Indices[0] = 0;
+	meshData.Indices[1] = 1;
+	meshData.Indices[2] = 2;
 
-	meshData.mIndices[3] = 0;
-	meshData.mIndices[4] = 2;
-	meshData.mIndices[5] = 3;
+	meshData.Indices[3] = 0;
+	meshData.Indices[4] = 2;
+	meshData.Indices[5] = 3;
 
 	D3D11_BUFFER_DESC vbd;
 	vbd.Usage = D3D11_USAGE_IMMUTABLE;
-	vbd.ByteWidth = sizeof(FullVertex) * meshData.mVertices.size();
+	vbd.ByteWidth = sizeof(Vertex) * meshData.Vertices.size();
 	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vbd.CPUAccessFlags = 0;
 	vbd.MiscFlags = 0;
 	D3D11_SUBRESOURCE_DATA vinitData;
-	vinitData.pSysMem = &meshData.mVertices[0];
+	vinitData.pSysMem = &meshData.Vertices[0];
 	device->CreateBuffer(&vbd, &vinitData, vertexBuffer);
 
 	D3D11_BUFFER_DESC ibd;
 	ibd.Usage = D3D11_USAGE_IMMUTABLE;
-	ibd.ByteWidth = sizeof(UINT) * meshData.mIndices.size();
+	ibd.ByteWidth = sizeof(UINT) * meshData.Indices.size();
 	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	ibd.CPUAccessFlags = 0;
 	ibd.MiscFlags = 0;
 	D3D11_SUBRESOURCE_DATA iinitData;
-	iinitData.pSysMem = &meshData.mIndices[0];
+	iinitData.pSysMem = &meshData.Indices[0];
 	device->CreateBuffer(&ibd, &iinitData, indexBuffer);
 
 }

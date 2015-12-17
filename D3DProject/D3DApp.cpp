@@ -1,11 +1,5 @@
 #include "D3DApp.h"
 
-#if 0
-//std::wostringstream OSS;
-//OSS << mMainWindowTitleBarText << L"      " << L"TIME: " << mAdjustedTime;
-//SetWindowText(mMainWnd, OSS.str().c_str());
-#endif
-
 //Application Entry Point
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 {
@@ -46,8 +40,9 @@ mVertexInputLayout(NULL)
 	XMStoreFloat4x4(&mStalker, IdentityMX);
 	XMStoreFloat4x4(&mCyberDemons, IdentityMX);
 	XMStoreFloat4x4(&mTree, IdentityMX);
-//	XMStoreFloat4x4(&mMiniMap, IdentityMX);
+	XMStoreFloat4x4(&mFullScreenQuad, IdentityMX);
 	XMStoreFloat4x4(&mSceneCube, IdentityMX);
+
 	//Skybox
 	mSkyBoxScalingMX = XMMatrixScaling(666.0f, 666.0f, 666.0f);
 	//Quad
@@ -60,7 +55,6 @@ mVertexInputLayout(NULL)
 	mStalkerTranslationMX = XMMatrixTranslation(-3.0f, 0.0f, 0.0f);
 	mStalkerTransformationMX = XMMatrixMultiply(mStalkerScalingMX, XMMatrixMultiply(mStalkerRotationMX, mStalkerTranslationMX));
 	XMStoreFloat4x4(&mStalker, mStalkerTransformationMX);
-
 
 	//Shader Info CB
 	XMStoreFloat4(&shaderInfoDataBlock1, XMVectorZero());
@@ -123,12 +117,18 @@ D3DApp::~D3DApp()
 	SAFE_RELEASE(mRenderTargetTexture);
 	SAFE_RELEASE(mRenderTargetRTV);
 	SAFE_RELEASE(mRenderTargetSRV);
-	SAFE_RELEASE(mMiniMapVS);
-	SAFE_RELEASE(mMiniMapPS);
+	SAFE_RELEASE(mPostProcessingVS);
+	SAFE_RELEASE(mPostProcessingPS);
 	SAFE_RELEASE(mAltQuadSRV);
 	SAFE_RELEASE(mSceneCubeVB);
 	SAFE_RELEASE(mSceneCubeIB);
-
+	SAFE_RELEASE(mPostProcessingInputLayout);
+	SAFE_RELEASE(mFullScreenQuadRTV);
+	SAFE_RELEASE(mFullScreenQuadDSV);
+	SAFE_RELEASE(mFullScreenQuadSRV);
+	SAFE_RELEASE(mFullScreenQuadTexture);
+	SAFE_RELEASE(mFullScreenQuadDepthStencilBuffer);
+	SAFE_RELEASE(mPostProcessingPS);
 }
 
 bool D3DApp::Init()
@@ -166,7 +166,6 @@ void D3DApp::Update(float deltaTime)
 void D3DApp::Draw()
 {	
 	float mClearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	float mMiniMapClearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	float mBlendFactor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	mD3DDeviceContext->ClearRenderTargetView(mRenderTargetView, mClearColor);
 	mD3DDeviceContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -346,11 +345,13 @@ void D3DApp::Draw()
 	mD3DDeviceContext->PSSetShaderResources(0, 1, &mTreeSRV);
 	mD3DDeviceContext->RSSetState(mNoCullRasterState);
 	mD3DDeviceContext->DrawIndexedInstanced(mTreeMesh.Indices.size(), mNumInstances, 0, 0, 0);
+	mD3DDeviceContext->RSSetState(0);
+	mD3DDeviceContext->OMSetBlendState(0, mBlendFactor, 0xffffffff);
 
 	//Switch To SceneCube's RenderTarget
 	mD3DDeviceContext->RSSetViewports(1, &mRenderTargetViewPort);
 	mD3DDeviceContext->OMSetRenderTargets(1, &mRenderTargetRTV, NULL);
-	mD3DDeviceContext->ClearRenderTargetView(mRenderTargetRTV, mMiniMapClearColor);
+	mD3DDeviceContext->ClearRenderTargetView(mRenderTargetRTV, mClearColor);
 	mD3DDeviceContext->ClearDepthStencilView(mRenderTargetDSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	//Start Alternate Draw
 	//SkyBox
@@ -388,6 +389,7 @@ void D3DApp::Draw()
 	mD3DDeviceContext->PSSetShaderResources(0, 1, &mAltQuadSRV);
 	mD3DDeviceContext->RSSetState(mNoCullRasterState);
 	mD3DDeviceContext->DrawIndexed(mQuadMesh.mIndices.size(), 0, 0);
+	mD3DDeviceContext->RSSetState(0);
 	//End Alternate Draw
 	//Switch Back To BackBuffer
 	mD3DDeviceContext->RSSetViewports(1, &mViewPort);
@@ -420,38 +422,139 @@ void D3DApp::Draw()
 	mD3DDeviceContext->DrawIndexed(mSceneCubeInfo.mIndices.size(), 0, 0);
 
 	//Switch To Full Screen Quad's Render Target
-	mD3DDeviceContext->OMSetRenderTargets(1, &mFullScreenQuadRTV, mDepthStencilView);
-	mD3DDeviceContext->ClearRenderTargetView(mOffscreenRTV, reinterpret_cast<const float*>(&Colors::Silver));
-	mD3DDeviceContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	mD3DDeviceContext->OMSetRenderTargets(1, &mRenderTargetRTV, NULL);
-	mD3DDeviceContext->ClearRenderTargetView(mRenderTargetRTV, mMiniMapClearColor);
-	mD3DDeviceContext->ClearDepthStencilView(mDepthStencilMiniMapView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	mD3DDeviceContext->RSSetViewports(1, &mFullScreenQuadViewPort);
+	mD3DDeviceContext->OMSetRenderTargets(1, &mFullScreenQuadRTV, mFullScreenQuadDSV);
+	mD3DDeviceContext->ClearRenderTargetView(mFullScreenQuadRTV, mClearColor);
+	mD3DDeviceContext->ClearDepthStencilView(mFullScreenQuadDSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	//Start Post Processing Draw
+	//SkyBox
+	mD3DDeviceContext->IASetInputLayout(mPosInputLayout);
+	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	mD3DDeviceContext->IASetVertexBuffers(1, 1, &mSkyBoxVB, &strideSB, &offsetSB);
+	mD3DDeviceContext->IASetIndexBuffer(mSkyBoxIB, DXGI_FORMAT_R32_UINT, 0);
+	mD3DDeviceContext->VSSetShader(mSkyBoxVS, NULL, 0);
+	mD3DDeviceContext->PSSetShader(mSkyBoxPS, NULL, 0);
+	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBufferSB);
+	mD3DDeviceContext->PSSetConstantBuffers(10, 1, &cBufferShaderMiscInfo);
+	mD3DDeviceContext->PSSetSamplers(0, 1, &mAnisoSamplerState);
+	mD3DDeviceContext->PSSetShaderResources(0, 1, &mSkyBoxSRV);
+	mD3DDeviceContext->PSSetShaderResources(1, 1, &mSkyBox2SRV);
+	mD3DDeviceContext->RSSetState(mNoCullRasterState);
+	mD3DDeviceContext->OMSetDepthStencilState(mLessEqualDSS, 0);
+	mD3DDeviceContext->DrawIndexed(skyBoxInfo.ibCount, 0, 0);
+	mD3DDeviceContext->VSSetShader(mSimpleVS, NULL, NULL);
+	mD3DDeviceContext->RSSetState(mDefaultRasterState);
+	mD3DDeviceContext->OMSetDepthStencilState(NULL, 0);
 
-	////Mini-Map
-	//UINT strideMiniMap = sizeof(Vertex);
-	//UINT offsetMiniMap = 0;
-	//mD3DDeviceContext->IASetInputLayout(mVertexInputLayout);
-	//mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//mD3DDeviceContext->IASetVertexBuffers(3, 1, &mMiniMapVB, &strideMiniMap, &offsetMiniMap);
-	//mD3DDeviceContext->IASetIndexBuffer(mMiniMapIB, DXGI_FORMAT_R32_UINT, 0);
-	//mD3DDeviceContext->VSSetShader(mMiniMapVS, NULL, 0);
-	//mD3DDeviceContext->PSSetShader(mMiniMapPS, NULL, 0);
-	//cbPerObjectTransformation mMiniMapCB;
-	//XMStoreFloat4x4(&mMiniMapCB.mWorldViewProj, mMiniMapViewProj);
-	//XMStoreFloat4x4(&mMiniMapCB.mWorldMatrix, XMMatrixIdentity());
-	//mMiniMapConstantBufferQuadInfo.Data = mMiniMapCB;
-	//mMiniMapConstantBufferQuadInfo.ApplyChanges(mD3DDeviceContext);
-	//auto cBufferMiniMapQuad = mMiniMapConstantBufferQuadInfo.Buffer();
-	//mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBufferMiniMapQuad);
-	//mD3DDeviceContext->PSSetSamplers(0, 1, &mAnisoSamplerState);
-	//mD3DDeviceContext->PSSetShaderResources(0, 1, &mRenderTargetView);
-	//mD3DDeviceContext->DrawIndexed(mMiniMapQuad.Indices.size(), 0, 0);
+	//GroundQuad
+	mD3DDeviceContext->IASetInputLayout(mFullVertexInputLayout);
+	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	mD3DDeviceContext->IASetVertexBuffers(6, 1, &mQuadVB, &strideQuad, &offsetQuad);
+	mD3DDeviceContext->IASetIndexBuffer(mQuadIB, DXGI_FORMAT_R32_UINT, 0);
+	mD3DDeviceContext->VSSetShader(mTextureLightVS, NULL, 0);
+	mD3DDeviceContext->PSSetShader(mTextureLightPS, NULL, 0);
+	ShaderMiscCB.dataBlock1.x = mUVTiledGroundScalar;
+	mShaderConstantBufferInfo.Data = ShaderMiscCB;
+	mShaderConstantBufferInfo.ApplyChanges(mD3DDeviceContext);
+	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBufferQD);
+	mD3DDeviceContext->PSSetConstantBuffers(3, 1, &cBufferQDMat);
+	mD3DDeviceContext->PSSetConstantBuffers(10, 1, &cBufferShaderMiscInfo);
+	mD3DDeviceContext->PSSetSamplers(0, 1, &mAnisoSamplerState);
+	mD3DDeviceContext->PSSetShaderResources(0, 1, &mQuadSRV);
+	mD3DDeviceContext->RSSetState(mNoCullRasterState);
+	mD3DDeviceContext->DrawIndexed(mQuadMesh.mIndices.size(), 0, 0);
+
+	//Stalker
+	mD3DDeviceContext->IASetInputLayout(mFullVertexInputLayout);
+	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	mD3DDeviceContext->IASetVertexBuffers(6, 1, &mStalkerVB, &strideStalker, &offsetStalker);
+	mD3DDeviceContext->IASetIndexBuffer(mStalkerIB, DXGI_FORMAT_R32_UINT, 0);
+	mD3DDeviceContext->VSSetShader(mTextureLightVS, NULL, 0);
+	mD3DDeviceContext->PSSetShader(mTextureLightPS, NULL, 0);
+	ShaderMiscCB.dataBlock1.x = mUVDefaultScalar;
+	mShaderConstantBufferInfo.Data = ShaderMiscCB;
+	mShaderConstantBufferInfo.ApplyChanges(mD3DDeviceContext);
+	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBufferStalker);
+	mD3DDeviceContext->PSSetConstantBuffers(10, 1, &cBufferShaderMiscInfo);
+	mD3DDeviceContext->PSSetSamplers(0, 1, &mAnisoSamplerState);
+	mD3DDeviceContext->PSSetShaderResources(0, 1, &mStalkerSRV);
+	mD3DDeviceContext->RSSetState(mDefaultRasterState);
+	mD3DDeviceContext->DrawIndexed(mStalkerMesh.mIndices.size(), 0, 0);
+
+	//CyberDemons
+	mD3DDeviceContext->IASetInputLayout(mBillBoardInputLayout);
+	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+	mD3DDeviceContext->IASetVertexBuffers(2, 1, &mCyberDemonVB, &strideBillBoard, &offsetBillBoard);
+	mD3DDeviceContext->VSSetShader(mBillBoardVS, NULL, 0);
+	mD3DDeviceContext->GSSetShader(mBillBoardGS, NULL, 0);
+	mD3DDeviceContext->PSSetShader(mBillBoardPS, NULL, 0);
+	ShaderMiscCB.dataBlock1.x = mUVCyberDemonBillBoardUVx;
+	ShaderMiscCB.dataBlock1.y = mUVCyberDemonBillBoardUVy;
+	mShaderConstantBufferInfo.Data = ShaderMiscCB;
+	mShaderConstantBufferInfo.ApplyChanges(mD3DDeviceContext);
+	mD3DDeviceContext->GSSetConstantBuffers(0, 1, &cBufferPointSprite);
+	mD3DDeviceContext->GSSetConstantBuffers(10, 1, &cBufferShaderMiscInfo);
+	mD3DDeviceContext->PSSetConstantBuffers(10, 1, &cBufferShaderMiscInfo);
+	mD3DDeviceContext->PSSetSamplers(0, 1, &mAnisoSamplerState);
+	mD3DDeviceContext->PSSetShaderResources(0, 1, &mCyberDemonSRV);
+	mD3DDeviceContext->RSSetState(mNoCullRasterState);
+	mD3DDeviceContext->OMSetBlendState(mTransparentBlendState, mBlendFactor, 0xFFFFFFFF);
+	mD3DDeviceContext->Draw(mNumOfCyberDemons, 0);
+	mD3DDeviceContext->GSSetShader(NULL, NULL, NULL);
+
+	//Mario Trees
+	mD3DDeviceContext->IASetInputLayout(mInstancedInputLayout);
+	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	mD3DDeviceContext->IASetVertexBuffers(7, 2, VBs, stridesInstance, offsetsInstance);
+	mD3DDeviceContext->IASetIndexBuffer(mTreeIB, DXGI_FORMAT_R32_UINT, 0);
+	mD3DDeviceContext->VSSetShader(mTreeInstanceVS, NULL, 0);
+	mD3DDeviceContext->PSSetShader(mTreeInstancePS, NULL, 0);
+	ShaderMiscCB.dataBlock1.x = mUVDefaultScalar;
+	ShaderMiscCB.dataBlock1.y = mUVDefaultScalar;
+	mShaderConstantBufferInfo.Data = ShaderMiscCB;
+	mShaderConstantBufferInfo.ApplyChanges(mD3DDeviceContext);
+	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBufferInstance);
+	mD3DDeviceContext->PSSetSamplers(0, 1, &mAnisoSamplerState);
+	mD3DDeviceContext->PSSetShaderResources(0, 1, &mTreeSRV);
+	mD3DDeviceContext->RSSetState(mNoCullRasterState);
+	mD3DDeviceContext->DrawIndexedInstanced(mTreeMesh.Indices.size(), mNumInstances, 0, 0, 0);
+	mD3DDeviceContext->RSSetState(0);
+	mD3DDeviceContext->OMSetBlendState(0, mBlendFactor, 0xffffffff);
+	//End Post Processing Draw
+
+	//Switch Back To Main BackBuffer
+	mD3DDeviceContext->RSSetViewports(1, &mViewPort);
+	mD3DDeviceContext->OMSetRenderTargets(1, &mRenderTargetView, mDepthStencilView);
+
+	//Draw Post Processing Quad Overlay
+	UINT stridePostProccesingQuad = sizeof(Vertex);
+	UINT offsetPostProccesingQuad = 0;
+	mD3DDeviceContext->IASetInputLayout(mPostProcessingInputLayout);
+	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	mD3DDeviceContext->IASetVertexBuffers(4, 1, &mFullScreenQuadVB, &stridePostProccesingQuad, &offsetPostProccesingQuad);
+	mD3DDeviceContext->IASetIndexBuffer(mFullScreenQuadIB, DXGI_FORMAT_R32_UINT, 0);
+	mD3DDeviceContext->VSSetShader(mPostProcessingVS, NULL, 0);
+	mD3DDeviceContext->PSSetShader(mPostProcessingPS, NULL, 0);
+	cbPerObjectTransformation mFullScreenQuadCB;
+	XMStoreFloat4x4(&mFullScreenQuadCB.mWorldViewProj, mFullScreenQuadViewProj);
+	XMStoreFloat4x4(&mFullScreenQuadCB.mWorldMatrix, XMMatrixTranslationFromVector(XMVectorSet(0.0f, 0.5f, 1.0f, 1.0f)));
+	mFullScreenQuadConstBuffer.Data = mFullScreenQuadCB;
+	mFullScreenQuadConstBuffer.ApplyChanges(mD3DDeviceContext);
+	auto cBufferPostProccesingQuad = mFullScreenQuadConstBuffer.Buffer();
+	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cBufferPostProccesingQuad);
+	mD3DDeviceContext->PSSetSamplers(0, 1, &mAnisoSamplerState);
+	mD3DDeviceContext->PSSetShaderResources(0, 1, &mFullScreenQuadSRV);
+	mD3DDeviceContext->DrawIndexed(mFullScreenQuadInfo.Indices.size(), 0, 0);
 
 
 
 
 	//Hard Reset
-	mD3DDeviceContext->RSSetState(mDefaultRasterState);
+	mD3DDeviceContext->RSSetState(0);
+	mD3DDeviceContext->OMSetBlendState(0, mBlendFactor, 0xffffffff);
+
+
+
 	//Present
 	mSwapChain->Present(1, 0);
 }
@@ -592,17 +695,71 @@ void D3DApp::BuildOtherRenderTargets()
 	mRenderTargetViewPort.MaxDepth = 1.0f;
 
 	//Full Screen Quad, RTV, SRV, DSV, Viewport
+	D3D11_TEXTURE2D_DESC fullScreenQuadRenderTexture;
+	ZeroMemory(&fullScreenQuadRenderTexture, sizeof(fullScreenQuadRenderTexture));
+	fullScreenQuadRenderTexture.Width = mWindowWidth;
+	fullScreenQuadRenderTexture.Height = mWindowHeight;
+	fullScreenQuadRenderTexture.MipLevels = 1;
+	fullScreenQuadRenderTexture.ArraySize = 1;
+	fullScreenQuadRenderTexture.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	fullScreenQuadRenderTexture.SampleDesc.Count = 1;
+	fullScreenQuadRenderTexture.SampleDesc.Quality = 0;
+	fullScreenQuadRenderTexture.Usage = D3D11_USAGE_DEFAULT;
+	fullScreenQuadRenderTexture.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	fullScreenQuadRenderTexture.CPUAccessFlags = 0;
+	fullScreenQuadRenderTexture.MiscFlags = 0;
+	mD3DDevice->CreateTexture2D(&fullScreenQuadRenderTexture, NULL, &mFullScreenQuadTexture);
+
+	D3D11_RENDER_TARGET_VIEW_DESC fullScreenQuadViewDesc;
+	ZeroMemory(&fullScreenQuadViewDesc, sizeof(fullScreenQuadViewDesc));
+	fullScreenQuadViewDesc.Format = fullScreenQuadRenderTexture.Format;
+	fullScreenQuadViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	fullScreenQuadViewDesc.Texture2D.MipSlice = NULL;
+	mD3DDevice->CreateRenderTargetView(mFullScreenQuadTexture, NULL, &mFullScreenQuadRTV);
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC fullScreenQuadshaderResourceViewDesc;
+	ZeroMemory(&fullScreenQuadshaderResourceViewDesc, sizeof(fullScreenQuadshaderResourceViewDesc));
+	fullScreenQuadshaderResourceViewDesc.Format = fullScreenQuadRenderTexture.Format;
+	fullScreenQuadshaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	fullScreenQuadshaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+	fullScreenQuadshaderResourceViewDesc.Texture2D.MipLevels = 1;
+	mD3DDevice->CreateShaderResourceView(mFullScreenQuadTexture, NULL, &mFullScreenQuadSRV);
+
+	D3D11_TEXTURE2D_DESC fullScreenQuadDepthStencilTextureDesc;
+	ZeroMemory(&fullScreenQuadDepthStencilTextureDesc, sizeof(fullScreenQuadDepthStencilTextureDesc));
+	fullScreenQuadDepthStencilTextureDesc.Width = mWindowWidth;
+	fullScreenQuadDepthStencilTextureDesc.Height = mWindowHeight;
+	fullScreenQuadDepthStencilTextureDesc.MipLevels = 1;
+	fullScreenQuadDepthStencilTextureDesc.ArraySize = 1;
+	fullScreenQuadDepthStencilTextureDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	fullScreenQuadDepthStencilTextureDesc.SampleDesc.Count = 1;
+	fullScreenQuadDepthStencilTextureDesc.SampleDesc.Quality = 0;
+	fullScreenQuadDepthStencilTextureDesc.Usage = D3D11_USAGE_DEFAULT;
+	fullScreenQuadDepthStencilTextureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	fullScreenQuadDepthStencilTextureDesc.CPUAccessFlags = 0;
+	fullScreenQuadDepthStencilTextureDesc.MiscFlags = 0;
+	mD3DDevice->CreateTexture2D(&fullScreenQuadDepthStencilTextureDesc, NULL, &mFullScreenQuadDepthStencilBuffer);
+	mD3DDevice->CreateDepthStencilView(mFullScreenQuadDepthStencilBuffer, 0, &mFullScreenQuadDSV);
+	
+	mFullScreenQuadViewPort.Width = static_cast<float>(mWindowWidth);
+	mFullScreenQuadViewPort.Height = static_cast<float>(mWindowHeight);
+	mFullScreenQuadViewPort.TopLeftX = 0.0f;
+	mFullScreenQuadViewPort.TopLeftY = 0.0f;
+	mFullScreenQuadViewPort.MinDepth = 0.0f;
+	mFullScreenQuadViewPort.MaxDepth = 1.0f;
+
 	////RTT View Matrix Setup
 	//XMVECTOR mapCamPosition = mCamera.GetPositionXM();
 	//XMVECTOR mapCamTarget = mCamera.GetLookXM();
 	//XMVECTOR mapCamUp = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
 	//mRenderTargetViewMX = XMMatrixLookAtLH(mapCamPosition, mapCamTarget, mapCamUp);
 
-	////RTT VP MXs
-	//mMiniMapScalingMX = XMMatrixScaling(1.0f, 1.0f, 0.0f);
-	//mMiniMapTranslationMX = XMMatrixTranslation(0.0f, 0.0f, 0.0f);
-	//mMiniMapTransformationMX = XMMatrixMultiply(mMiniMapScalingMX, mMiniMapTranslationMX);
-	//mMiniMapViewProj = mMiniMapTransformationMX;
+
+	//RTT VP MXs
+	mFullScreenQuadScalingMX = XMMatrixScaling(1.0f, 1.0f, 0.0f);
+	mFullScreenQuadTranslationMX = XMMatrixTranslation(0.0f, 0.0f, 0.0f);
+	mFullScreenQuadTransformationMX = XMMatrixMultiply(mFullScreenQuadScalingMX, mFullScreenQuadTranslationMX);
+	mFullScreenQuadViewProj = mFullScreenQuadTransformationMX;
 
 
 
@@ -622,8 +779,8 @@ void D3DApp::CompileShaders()
 	mD3DDevice->CreatePixelShader(BillBoardPS, sizeof(BillBoardPS), NULL, &mBillBoardPS);
 	mD3DDevice->CreateVertexShader(InstanceVS, sizeof(InstanceVS), NULL, &mTreeInstanceVS);
 	mD3DDevice->CreatePixelShader(InstancePS, sizeof(InstancePS), NULL, &mTreeInstancePS);
-	mD3DDevice->CreateVertexShader(RenderTextureVS, sizeof(RenderTextureVS), NULL, &mMiniMapVS);
-	mD3DDevice->CreatePixelShader(RenderTexturePS, sizeof(RenderTexturePS), NULL, &mMiniMapPS);
+	mD3DDevice->CreateVertexShader(RenderTextureVS, sizeof(RenderTextureVS), NULL, &mPostProcessingVS);
+	mD3DDevice->CreatePixelShader(RenderTexturePS, sizeof(RenderTexturePS), NULL, &mPostProcessingPS);
 }
 
 void D3DApp::DefineInputLayouts()
@@ -679,6 +836,14 @@ void D3DApp::DefineInputLayouts()
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    6, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 	mD3DDevice->CreateInputLayout(fullVertexDesc, ARRAYSIZE(fullVertexDesc), TextureLightingVS, sizeof(TextureLightingVS), &mFullVertexInputLayout);
+
+	D3D11_INPUT_ELEMENT_DESC postProcessingDesc[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 4, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 4, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 4, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	};
+	mD3DDevice->CreateInputLayout(postProcessingDesc, ARRAYSIZE(postProcessingDesc), RenderTextureVS, sizeof(RenderTextureVS), &mPostProcessingInputLayout);
 
 	
 
@@ -849,6 +1014,32 @@ void D3DApp::GetUserInput(float deltaTime)
 
 		}
 	}
+	if (GetAsyncKeyState('1') & 0x8000)
+	{
+		SAFE_RELEASE(mPostProcessingPS);
+		mD3DDevice->CreatePixelShader(GrayScaleFilter, sizeof(GrayScaleFilter), NULL, &mPostProcessingPS);
+	}
+	if (GetAsyncKeyState('2') & 0x8000)
+	{
+		SAFE_RELEASE(mPostProcessingPS);
+		mD3DDevice->CreatePixelShader(SepiaFilter, sizeof(SepiaFilter), NULL, &mPostProcessingPS);
+	}
+	if (GetAsyncKeyState('3') & 0x8000)
+	{
+		SAFE_RELEASE(mPostProcessingPS);
+		mD3DDevice->CreatePixelShader(InverseFilter, sizeof(InverseFilter), NULL, &mPostProcessingPS);
+	}
+	if (GetAsyncKeyState('4') & 0x8000)
+	{
+		SAFE_RELEASE(mPostProcessingPS);
+		mD3DDevice->CreatePixelShader(BlurFilter, sizeof(BlurFilter), NULL, &mPostProcessingPS);
+	}
+	if (GetAsyncKeyState('0') & 0x8000)
+	{
+		SAFE_RELEASE(mPostProcessingPS);
+		mD3DDevice->CreatePixelShader(RenderTexturePS, sizeof(RenderTexturePS), NULL, &mPostProcessingPS);
+	}
+	
 	// 0 - Point Light Control
 	if (lightFlag == 0)
 	{

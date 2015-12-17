@@ -12,3 +12,7 @@
 #include "InstancePS.csh"
 #include "RenderTextureVS.csh"
 #include "RenderTexturePS.csh"
+#include "GrayScaleFilter.csh"
+#include "SepiaFilter.csh"
+#include "InverseFilter.csh"
+#include "BlurFilter.csh"

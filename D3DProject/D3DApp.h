@@ -152,7 +152,6 @@ private:
 	ID3D11Texture2D* mRenderTargetDepthStencilBuffer;
 	D3D11_VIEWPORT mRenderTargetViewPort;
 
-
 	//Scene Cube
 	FMeshData mSceneCubeInfo;
 	string mSceneCubeFileName = "sceneCube.obj";
@@ -166,22 +165,26 @@ private:
 	XMMATRIX mSceneCubeTransformationMX;
 	
 	//Full Screen Quad (Post Processing)
-	FMeshData mFullScreenQuadInfo;
+	MeshData mFullScreenQuadInfo;
 	ID3D11Buffer* mFullScreenQuadVB;
 	ID3D11Buffer* mFullScreenQuadIB;
-	ConstantBuffer<cbPerObjectTransformation> mFullScreenQuadConstBuffer;
 	ID3D11RenderTargetView* mFullScreenQuadRTV;
-	ID3D11DepthStencilView* mullScreenQuadDSV;
+	ID3D11DepthStencilView* mFullScreenQuadDSV;
+	ID3D11ShaderResourceView* mFullScreenQuadSRV;
+	ID3D11Texture2D* mFullScreenQuadTexture;
 	ID3D11Texture2D* mFullScreenQuadDepthStencilBuffer;
 	D3D11_VIEWPORT mFullScreenQuadViewPort;
 
-	/*XMMATRIX mFullScreenQuadViewMX;
+
+	ConstantBuffer<cbPerObjectTransformation> mFullScreenQuadConstBuffer;
 	XMFLOAT4X4 mFullScreenQuad;
+	XMMATRIX mFullScreenQuadViewMX;
+	XMMATRIX mFullScreenQuadViewProj;
 	XMMATRIX mFullScreenQuadScalingMX;
 	XMMATRIX mFullScreenQuadTranslationMX;
 	XMMATRIX mFullScreenQuadTransformationMX;
-	XMMATRIX mFullScreenQuadViewProj;
-	*/
+	
+	
 	
 
 	//Materials Per Object
@@ -207,6 +210,7 @@ private:
 	ID3D11InputLayout* mPosColInputLayout;
 	ID3D11InputLayout* mVertexInputLayout;
 	ID3D11InputLayout* mFullVertexInputLayout;
+	ID3D11InputLayout* mPostProcessingInputLayout;
 	ID3D11InputLayout* mBillBoardInputLayout;
 	ID3D11InputLayout* mInstancedInputLayout;
 	
@@ -235,8 +239,8 @@ private:
 	ID3D11PixelShader* mBillBoardPS;
 	ID3D11VertexShader* mTreeInstanceVS;
 	ID3D11PixelShader* mTreeInstancePS;
-	ID3D11VertexShader* mMiniMapVS;
-	ID3D11PixelShader* mMiniMapPS;
+	ID3D11VertexShader* mPostProcessingVS;
+	ID3D11PixelShader* mPostProcessingPS;
 
 	/////////////////////////////////////////////////////////////
 	// Win32 & Misc Variables
