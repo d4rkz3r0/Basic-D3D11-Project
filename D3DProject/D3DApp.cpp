@@ -159,6 +159,7 @@ void D3DApp::Update(float deltaTime)
 	GetUserInput(deltaTime);
 	UpdateCamera(deltaTime);
 	SceneCubeUpdate();
+	PostProcessQuadUpdate();
 	UpdateSkybox(deltaTime);
 	UpdateLights(deltaTime);
 }
@@ -520,13 +521,29 @@ void D3DApp::Draw()
 	mD3DDeviceContext->DrawIndexedInstanced(mTreeMesh.Indices.size(), mNumInstances, 0, 0, 0);
 	mD3DDeviceContext->RSSetState(0);
 	mD3DDeviceContext->OMSetBlendState(0, mBlendFactor, 0xffffffff);
+
+	//RTT Scene Cube
+	mD3DDeviceContext->IASetInputLayout(mFullVertexInputLayout);
+	mD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	mD3DDeviceContext->IASetVertexBuffers(6, 1, &mSceneCubeVB, &strideSceneCube, &offsetSceneCube);
+	mD3DDeviceContext->IASetIndexBuffer(mSceneCubeIB, DXGI_FORMAT_R32_UINT, 0);
+	mD3DDeviceContext->VSSetShader(mTextureLightVS, NULL, 0);
+	mD3DDeviceContext->PSSetShader(mTextureLightPS, NULL, 0);
+	ShaderMiscCB.dataBlock1.x = 1.0f;
+	mShaderConstantBufferInfo.Data = ShaderMiscCB;
+	mShaderConstantBufferInfo.ApplyChanges(mD3DDeviceContext);
+	mD3DDeviceContext->VSSetConstantBuffers(0, 1, &cSceneBuffer);
+	mD3DDeviceContext->PSSetConstantBuffers(10, 1, &cBufferShaderMiscInfo);
+	mD3DDeviceContext->PSSetShaderResources(0, 1, &mRenderTargetSRV);
+	mD3DDeviceContext->RSSetState(mNoCullRasterState);
+	mD3DDeviceContext->DrawIndexed(mSceneCubeInfo.mIndices.size(), 0, 0);
 	//End Post Processing Draw
 
 	//Switch Back To Main BackBuffer
 	mD3DDeviceContext->RSSetViewports(1, &mViewPort);
 	mD3DDeviceContext->OMSetRenderTargets(1, &mRenderTargetView, mDepthStencilView);
 
-	//Draw Post Processing Quad Overlay
+	//Quad PostProcessing
 	UINT stridePostProccesingQuad = sizeof(Vertex);
 	UINT offsetPostProccesingQuad = 0;
 	mD3DDeviceContext->IASetInputLayout(mPostProcessingInputLayout);
@@ -747,19 +764,6 @@ void D3DApp::BuildOtherRenderTargets()
 	mFullScreenQuadViewPort.TopLeftY = 0.0f;
 	mFullScreenQuadViewPort.MinDepth = 0.0f;
 	mFullScreenQuadViewPort.MaxDepth = 1.0f;
-
-	////RTT View Matrix Setup
-	//XMVECTOR mapCamPosition = mCamera.GetPositionXM();
-	//XMVECTOR mapCamTarget = mCamera.GetLookXM();
-	//XMVECTOR mapCamUp = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-	//mRenderTargetViewMX = XMMatrixLookAtLH(mapCamPosition, mapCamTarget, mapCamUp);
-
-
-	//RTT VP MXs
-	mFullScreenQuadScalingMX = XMMatrixScaling(1.0f, 1.0f, 0.0f);
-	mFullScreenQuadTranslationMX = XMMatrixTranslation(0.0f, 0.0f, 0.0f);
-	mFullScreenQuadTransformationMX = XMMatrixMultiply(mFullScreenQuadScalingMX, mFullScreenQuadTranslationMX);
-	mFullScreenQuadViewProj = mFullScreenQuadTransformationMX;
 
 
 
@@ -1031,10 +1035,11 @@ void D3DApp::GetUserInput(float deltaTime)
 	}
 	if (GetAsyncKeyState('4') & 0x8000)
 	{
+		mFSQuadScale = 1.05f;
 		SAFE_RELEASE(mPostProcessingPS);
 		mD3DDevice->CreatePixelShader(BlurFilter, sizeof(BlurFilter), NULL, &mPostProcessingPS);
 	}
-	if (GetAsyncKeyState('0') & 0x8000)
+	if (GetAsyncKeyState('5') & 0x8000)
 	{
 		SAFE_RELEASE(mPostProcessingPS);
 		mD3DDevice->CreatePixelShader(RenderTexturePS, sizeof(RenderTexturePS), NULL, &mPostProcessingPS);
@@ -1148,6 +1153,14 @@ void D3DApp::SceneCubeUpdate()
 	mSceneCubeTranslationMX = XMMatrixTranslationFromVector(XMVectorSet(15.0f, 5.25f, 15.0f, 1.0f));
 	mSceneCubeTransformationMX = XMMatrixMultiply(mSceneCubeScalingMX, XMMatrixMultiply(mSceneCubeRotationMX, mSceneCubeTranslationMX));
 	XMStoreFloat4x4(&mSceneCube, mSceneCubeTransformationMX);
+}
+
+void D3DApp::PostProcessQuadUpdate()
+{
+	mFullScreenQuadScalingMX = XMMatrixScaling(mFSQuadScale, mFSQuadScale, 0.0f);
+	mFullScreenQuadTranslationMX = XMMatrixTranslation(0.0f, 0.0f, 0.0f);
+	mFullScreenQuadTransformationMX = XMMatrixMultiply(mFullScreenQuadScalingMX, mFullScreenQuadTranslationMX);
+	mFullScreenQuadViewProj = mFullScreenQuadTransformationMX;
 }
 void D3DApp::UpdateCamera(float deltaTime)
 {

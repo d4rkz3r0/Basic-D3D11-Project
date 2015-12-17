@@ -26,6 +26,7 @@ private:
 	void CompileShaders();
 	void DefineInputLayouts();
 	void SceneCubeUpdate();
+	void PostProcessQuadUpdate();
 	void GetUserInput(float deltaTime);
 	void AnimateBillBoards(float& UVx, float& UVy, UINT flag);
 	void UpdateCamera(float deltaTime);
@@ -174,7 +175,7 @@ private:
 	ID3D11Texture2D* mFullScreenQuadTexture;
 	ID3D11Texture2D* mFullScreenQuadDepthStencilBuffer;
 	D3D11_VIEWPORT mFullScreenQuadViewPort;
-
+	float mFSQuadScale = 1.0f;
 
 	ConstantBuffer<cbPerObjectTransformation> mFullScreenQuadConstBuffer;
 	XMFLOAT4X4 mFullScreenQuad;

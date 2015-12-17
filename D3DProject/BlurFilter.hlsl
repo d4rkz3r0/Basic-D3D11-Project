@@ -16,6 +16,10 @@ float4 main(PS_IN fragmentIn) : SV_TARGET
 	float4 rightTextureColor = mColorMap.Sample(mSampler, (fragmentIn.inUVs.xy + (0.01f)));
 	float4 leftTextureColor = mColorMap.Sample(mSampler, (fragmentIn.inUVs.xy - (0.01f)));
 
+
+	//float4 rightTextureColor = mColorMap.Sample(mSampler, (fragmentIn.inUVs.xy + (0.0025f)));
+	//float4 leftTextureColor = mColorMap.Sample(mSampler, (fragmentIn.inUVs.xy - (0.0025f)));
+
 	finalColor = normTextureColor;
 	finalColor += rightTextureColor;
 	finalColor += leftTextureColor;
