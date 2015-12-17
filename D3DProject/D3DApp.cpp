@@ -1099,7 +1099,7 @@ void D3DApp::UpdateCamera(float deltaTime)
 
 void D3DApp::UpdateSkybox(float deltaTime)
 {
-	mTimeRatio = mTimer.TotalTime();
+	mTimeRatio = static_cast<float>(mTimer.TotalTime());
 	mSkyBoxTranslationMX = XMMatrixTranslationFromVector(mCamera.GetPositionXM());
 	mSkyBoxTransformationMX = XMMatrixMultiply(mSkyBoxScalingMX, mSkyBoxTranslationMX);
 	XMStoreFloat4x4(&mSkyBox, mSkyBoxTransformationMX);
