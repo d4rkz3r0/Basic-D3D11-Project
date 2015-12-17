@@ -16,3 +16,5 @@
 #include "SepiaFilter.csh"
 #include "InverseFilter.csh"
 #include "BlurFilter.csh"
+#include "NormalMappingVS.csh"
+#include "NormalMappingPS.csh"

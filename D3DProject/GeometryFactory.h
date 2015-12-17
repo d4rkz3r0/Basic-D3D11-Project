@@ -47,11 +47,6 @@ struct FMeshData
 	vector<FullVertex> mVertices;
 	vector<UINT> mIndices;
 	UINT mFaceCount;
-	
-	//Temp Containers to push into the mVertices after model loading.
-	vector<XMFLOAT3> mNormals;
-	vector<XMFLOAT3> mTangents;
-	vector<XMFLOAT3> mTexCoords;
 };
 
 struct FModelInfo
@@ -73,8 +68,9 @@ class GeometryFactory
 		void GenerateCube(PCMeshData& meshData);
 		void GenerateGrid(PCMeshData& meshData);
 		void GenerateStar(PCMeshData& meshData);
+		void GenerateSphere(FMeshData& meshData, float radius);
 		void GenerateStaticQuad(ID3D11Device* device, MeshData& meshData);
-		void GenerateModel(FMeshData& meshData, string& fileName, bool UVFlag = false, bool triangulateFlag = true, bool genNormalsFlag = true,	bool sortByPrimitiveType = true, bool removeDupVertFlag = true);
+		void GenerateModel(FMeshData& meshData, string& fileName, bool UVFlag = false, bool triangulateFlag = true, bool genNormalsFlag = true, bool sortByPrimitiveType = true, bool removeDupVertFlag = true, bool calcTangentFlag = false);//, bool defaultFlag = false);
 		void GenerateVertexAndIndexBuffers(ID3D11Device* device, FMeshData& meshData, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer);
 		void GenerateVertexAndIndexBuffersNon(ID3D11Device* device, MeshData& meshData, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer);
 		void GenerateBillBoards(ID3D11Device* device, ID3D11Buffer** vertexBuffer, UINT maxBillboards, float billboardSize, float xPosRange, float height, float zPosRange);

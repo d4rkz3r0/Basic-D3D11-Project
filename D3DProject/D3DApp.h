@@ -25,10 +25,11 @@ private:
 	void BuildOtherRenderTargets();
 	void CompileShaders();
 	void DefineInputLayouts();
-	void SceneCubeUpdate();
+	void RotatingObjectsUpdate();
 	void PostProcessQuadUpdate();
 	void GetUserInput(float deltaTime);
 	void AnimateBillBoards(float& UVx, float& UVy, UINT flag);
+	void RotateInstancedTrees();
 	void UpdateCamera(float deltaTime);
 	void UpdateSkybox(float deltaTime);
 	void UpdateLights(float deltaTime);
@@ -53,14 +54,7 @@ private:
 	XMMATRIX mProj;
 	XMMATRIX mViewProj;
 	XMMATRIX mWorldViewProj;
-	float mCamScalar = 20.0f;
-
-	//Cube
-	PCMeshData cubeInfo;
-	XMFLOAT4X4 mCube;
-	ID3D11Buffer* mCubeVB;
-	ID3D11Buffer* mCubeIB;
-	ConstantBuffer<cbPerObjectTransformation> mObjectConstBuffer;
+	float mCamScalar = 30.0f;
 	
 	//SkyBox
 	PMeshData skyBoxInfo;
@@ -107,17 +101,17 @@ private:
 	ID3D11ShaderResourceView* mStalkerSRV;
 
 	//Lights
-	UINT lightFlag = 0; 
+	bool toggleLight = true; 
 	ConstantBuffer<DirectionalLight> mDirectionalLightInfo;
 	ConstantBuffer<PointLight> mPointLightInfo;
 	ConstantBuffer<SpotLight> mSpotLightInfo;
-	float mCurrPointLightPosX = 0.0f;
+	float mCurrPointLightPosX = -6.0f;
 	float mCurrPointLightPosY = 1.0f;
-	float mCurrPointLightPosZ = 0.0f;
+	float mCurrPointLightPosZ = 47.5f;
 	float mPointLightScalar = 20.0f;
 
 	float mCurrDirLightDirX = 0.0f;
-	float mCurrDirLightDirY = -0.25f;
+	float mCurrDirLightDirY = -0.75f;
 	float mCurrDirLightDirZ = 0.0f;
 	float mDirLightScalar = 10.0f;
 
@@ -136,6 +130,7 @@ private:
 	//Mario 64 Tree
 	MeshData mTreeMesh;
 	XMFLOAT4X4 mTree;
+	XMMATRIX mTreeTransformationMX;
 	const wchar_t* mTreeTextureFileName = L"mario64Tree.dds";
 	const int mNumInstances = 15;
 	ID3D11Buffer* mTreeVB;
@@ -151,7 +146,7 @@ private:
 	ID3D11DepthStencilView* mRenderTargetDSV;
 	ID3D11ShaderResourceView* mRenderTargetSRV;
 	ID3D11Texture2D* mRenderTargetDepthStencilBuffer;
-	D3D11_VIEWPORT mRenderTargetViewPort;
+
 
 	//Scene Cube
 	FMeshData mSceneCubeInfo;
@@ -175,8 +170,6 @@ private:
 	ID3D11Texture2D* mFullScreenQuadTexture;
 	ID3D11Texture2D* mFullScreenQuadDepthStencilBuffer;
 	D3D11_VIEWPORT mFullScreenQuadViewPort;
-	float mFSQuadScale = 1.0f;
-
 	ConstantBuffer<cbPerObjectTransformation> mFullScreenQuadConstBuffer;
 	XMFLOAT4X4 mFullScreenQuad;
 	XMMATRIX mFullScreenQuadViewMX;
@@ -184,8 +177,39 @@ private:
 	XMMATRIX mFullScreenQuadScalingMX;
 	XMMATRIX mFullScreenQuadTranslationMX;
 	XMMATRIX mFullScreenQuadTransformationMX;
+	float mFSQuadScale = 1.0f;
 	
-	
+	// Normal Mapping //
+	//Brick
+	FMeshData mBrickMesh;
+	XMFLOAT4X4 mBrick;
+	ID3D11Buffer* mBrickVB;
+	ID3D11Buffer* mBrickIB;
+	ID3D11ShaderResourceView* mBrickColorMapSRV;
+	ID3D11ShaderResourceView* mBrickNormalMapSRV;
+	XMMATRIX mBrickScalingMX;
+	XMMATRIX mBrickRotationMX;
+	XMMATRIX mBrickTranslationMX;
+	XMMATRIX mBrickTransformationMX;
+	ConstantBuffer<cbPerObjectTransformation> mBrickConstBuffer;
+	string mBrickModelFileName = "brick.obj";
+	const wchar_t* mBrickDiffuseTextureFileName = L"brickDMap.dds";
+	const wchar_t* mBrickNormalTextureFileName = L"brickNMap.dds";
+
+	//World Sphere
+	FMeshData mWorldSphereMesh;
+	XMFLOAT4X4 mWorldSphere;
+	ID3D11Buffer* mWorldSphereVB;
+	ID3D11Buffer* mWorldSphereIB;
+	ID3D11ShaderResourceView* mWorldSphereColorMapSRV;
+	ID3D11ShaderResourceView* mWorldSphereNormalMapSRV;
+	XMMATRIX mWorldSphereScalingMX;
+	XMMATRIX mWorldSphereRotationMX;
+	XMMATRIX mWorldSphereTranslationMX;
+	XMMATRIX mWorldSphereTransformationMX;
+	ConstantBuffer<cbPerObjectTransformation> mWorldSphereConstBuffer;
+	const wchar_t* mWorldDiffuseTextureFileName = L"worldDMap.dds";
+	const wchar_t* mWorldNormalTextureFileName = L"worldNMap.dds";
 	
 
 	//Materials Per Object
@@ -214,6 +238,7 @@ private:
 	ID3D11InputLayout* mPostProcessingInputLayout;
 	ID3D11InputLayout* mBillBoardInputLayout;
 	ID3D11InputLayout* mInstancedInputLayout;
+	ID3D11InputLayout* mNormalMapInputLayout;
 	
 	//Raster and Blend States
 	ID3D11RasterizerState* mDefaultRasterState;
@@ -228,6 +253,7 @@ private:
 	ID3D11DepthStencilState* mLessEqualDSS;
 	//Sampler States
 	ID3D11SamplerState* mAnisoSamplerState;
+	
 	//Shaders
 	ID3D11VertexShader* mSimpleVS;
 	ID3D11PixelShader* mSimplePS;
@@ -242,6 +268,8 @@ private:
 	ID3D11PixelShader* mTreeInstancePS;
 	ID3D11VertexShader* mPostProcessingVS;
 	ID3D11PixelShader* mPostProcessingPS;
+	ID3D11VertexShader* mNormalMappingVS;
+	ID3D11PixelShader* mNormalMappingPS;
 
 	/////////////////////////////////////////////////////////////
 	// Win32 & Misc Variables

@@ -57,10 +57,10 @@ class D3DBase
 		ID3D11Device* mD3DDevice;
 		ID3D11DeviceContext* mD3DDeviceContext;
 		IDXGISwapChain* mSwapChain;
-		ID3D11Texture2D* mDepthStencilBuffer;
-		ID3D11RenderTargetView* mRenderTargetView;
-		ID3D11DepthStencilView* mDepthStencilView;
-		D3D11_VIEWPORT mViewPort;
+		ID3D11Texture2D* mBackBufferDepthStencilBuffer;
+		ID3D11RenderTargetView* mBackBufferRTV;
+		ID3D11DepthStencilView* mBackBufferDSV;
+		D3D11_VIEWPORT mBackBufferViewPort;
 		D3D_DRIVER_TYPE mD3DDriverType;
 		UINT m4xMSAAQualityLevel;
 		bool mEnable4xMSAA;

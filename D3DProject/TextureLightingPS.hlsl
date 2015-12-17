@@ -200,7 +200,7 @@ float4 main(PS_IN fragmentIn) : SV_TARGET
 	FinalSpecularFactor += tempSpecularFactor;
 
 	//Spot
-	SpotLightFactors(PixelNormVec, fragmentIn.inPosWorld.xyz, Pixel2CameraDirection, textureDiffuse, tempAmbientFactor, tempDiffuseFactor, tempSpecularFactor);
+	//SpotLightFactors(PixelNormVec, fragmentIn.inPosWorld.xyz, Pixel2CameraDirection, textureDiffuse, tempAmbientFactor, tempDiffuseFactor, tempSpecularFactor);
 	FinalAmbientFactor += tempAmbientFactor;
 	FinalDiffuseFactor += tempDiffuseFactor;
 	FinalSpecularFactor += tempSpecularFactor;

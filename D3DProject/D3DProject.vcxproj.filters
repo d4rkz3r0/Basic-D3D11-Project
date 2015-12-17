@@ -154,6 +154,12 @@
     <FxCompile Include="BlurFilter.hlsl">
       <Filter>Source Files\Shaders\HLSL Source\PostProcessEffects</Filter>
     </FxCompile>
+    <FxCompile Include="NormalMappingVS.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source</Filter>
+    </FxCompile>
+    <FxCompile Include="NormalMappingPS.hlsl">
+      <Filter>Source Files\Shaders\HLSL Source</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="BasicPixelShader.csh">
@@ -205,6 +211,12 @@
       <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
     </None>
     <None Include="BlurFilter.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+    <None Include="NormalMappingVS.csh">
+      <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
+    </None>
+    <None Include="NormalMappingPS.csh">
       <Filter>Source Files\Shaders\Compiled ByteCode</Filter>
     </None>
   </ItemGroup>

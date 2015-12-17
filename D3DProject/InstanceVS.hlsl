@@ -6,6 +6,11 @@ cbuffer perObjConstBuffer : register(b0)
 	float4x4 mWorldMatrix;
 };
 
+cbuffer instanceRotationBuffer : register(b1)
+{
+	float4x4 mInstanceRotationMX;
+}
+
 struct VS_IN
 {
 	float3 inPosL : POSITION;

@@ -25,21 +25,21 @@ mD3DDriverType(D3D_DRIVER_TYPE_HARDWARE),
 mD3DDevice(NULL),
 mD3DDeviceContext(NULL),
 mSwapChain(NULL),
-mDepthStencilBuffer(NULL),
-mRenderTargetView(NULL),
-mDepthStencilView(NULL),
+mBackBufferDepthStencilBuffer(NULL),
+mBackBufferRTV(NULL),
+mBackBufferDSV(NULL),
 m4xMSAAQualityLevel(0),
 mEnable4xMSAA(true)
 {
-	ZeroMemory(&mViewPort, sizeof(mViewPort));
+	ZeroMemory(&mBackBufferViewPort, sizeof(mBackBufferViewPort));
 	gD3DApp = this;
 }
 
 D3DBase::~D3DBase()
 {
-	SAFE_RELEASE(mDepthStencilBuffer);
-	SAFE_RELEASE(mRenderTargetView);
-	SAFE_RELEASE(mDepthStencilView);
+	SAFE_RELEASE(mBackBufferDepthStencilBuffer);
+	SAFE_RELEASE(mBackBufferRTV);
+	SAFE_RELEASE(mBackBufferDSV);
 	SAFE_RELEASE(mSwapChain);
 	mD3DDeviceContext->ClearState(); //Unbind Resources and State Objects
 	SAFE_RELEASE(mD3DDeviceContext);
@@ -113,9 +113,9 @@ void D3DBase::ResizeWindow()
 	assert(mD3DDeviceContext);
 	assert(mSwapChain);
 
-	SAFE_RELEASE(mRenderTargetView);
-	SAFE_RELEASE(mDepthStencilView);
-	SAFE_RELEASE(mDepthStencilBuffer);
+	SAFE_RELEASE(mBackBufferRTV);
+	SAFE_RELEASE(mBackBufferDSV);
+	SAFE_RELEASE(mBackBufferDepthStencilBuffer);
 
 	//BackBuffer
 	mSwapChain->ResizeBuffers(1, mWindowWidth, mWindowHeight, DXGI_FORMAT_UNKNOWN, NULL);
@@ -123,7 +123,7 @@ void D3DBase::ResizeWindow()
 	
 	mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffer));
 	//D3D11_TEX2DMS_RTV structure not required
-	mD3DDevice->CreateRenderTargetView(backBuffer, NULL, &mRenderTargetView);
+	mD3DDevice->CreateRenderTargetView(backBuffer, NULL, &mBackBufferRTV);
 	SAFE_RELEASE(backBuffer);
 
 	//Depth/Stencil Buffer
@@ -154,19 +154,18 @@ void D3DBase::ResizeWindow()
 		depthStencilDesc.SampleDesc.Quality = 0;
 	}
 
-	mD3DDevice->CreateTexture2D(&depthStencilDesc, 0, &mDepthStencilBuffer);
+	mD3DDevice->CreateTexture2D(&depthStencilDesc, 0, &mBackBufferDepthStencilBuffer);
 	//D3D11_TEX2DMS_DSV not required
-	mD3DDevice->CreateDepthStencilView(mDepthStencilBuffer, 0, &mDepthStencilView);
-	mD3DDeviceContext->OMSetRenderTargets(1, &mRenderTargetView, mDepthStencilView);
+	mD3DDevice->CreateDepthStencilView(mBackBufferDepthStencilBuffer, 0, &mBackBufferDSV);
+
 	
 	//ViewPort
-	mViewPort.Width = static_cast<float>(mWindowWidth);
-	mViewPort.Height = static_cast<float>(mWindowHeight);
-	mViewPort.TopLeftX = 0.0f;
-	mViewPort.TopLeftY = 0.0f;
-	mViewPort.MinDepth = 0.0f;
-	mViewPort.MaxDepth = 1.0f;
-	mD3DDeviceContext->RSSetViewports(1, &mViewPort);
+	mBackBufferViewPort.Width = static_cast<float>(mWindowWidth);
+	mBackBufferViewPort.Height = static_cast<float>(mWindowHeight);
+	mBackBufferViewPort.TopLeftX = 0.0f;
+	mBackBufferViewPort.TopLeftY = 0.0f;
+	mBackBufferViewPort.MinDepth = 0.0f;
+	mBackBufferViewPort.MaxDepth = 1.0f;
 }
 
 LRESULT D3DBase::MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)

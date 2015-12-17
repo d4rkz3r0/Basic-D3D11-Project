@@ -27,7 +27,7 @@ public:
 		return mBuffer;
 	}
 
-	HRESULT Initialize(ID3D11Device* device, bool flag = false)
+	HRESULT Initialize(ID3D11Device* device)
 	{
 		HRESULT hr = S_OK;
 		D3D11_BUFFER_DESC desc;

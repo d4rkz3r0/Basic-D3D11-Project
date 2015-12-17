@@ -198,6 +198,82 @@ void GeometryFactory::GenerateStar(PCMeshData& meshData)
 	meshData.Indices.assign(&indices[0], &indices[meshData.ibCount]);
 }
 
+void GeometryFactory::GenerateSphere(FMeshData& meshData, float radius)
+{
+	meshData.mVertices.clear();
+	meshData.mIndices.clear();
+	FullVertex topVertex(0.0f, +radius, 0.0f, 0.0f, +1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+	FullVertex bottomVertex(0.0f, -radius, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	meshData.mVertices.push_back(topVertex);
+
+	float phiStep = XM_PI / 360;
+	float thetaStep = 2.0f * XM_PI / 360;
+
+	for (UINT i = 1; i <= 359; i++)
+	{
+		float phi = i * phiStep;
+
+		for (UINT j = 0; j <= 360; j++)
+		{
+			float theta = j * thetaStep;
+
+			FullVertex tempVertex;
+			tempVertex.position.x = radius * sinf(phi) * cosf(theta);
+			tempVertex.position.y = radius * cosf(phi);
+			tempVertex.position.z = radius * sinf(phi) * sinf(theta);
+
+			tempVertex.tangent.x = -radius * sinf(phi) * sinf(theta);
+			tempVertex.tangent.y = 0.0f;
+			tempVertex.tangent.z = +radius * sinf(phi) * cosf(theta);
+
+			XMVECTOR T = XMLoadFloat3(&tempVertex.tangent);
+			XMStoreFloat3(&tempVertex.tangent, XMVector3Normalize(T));
+
+			XMVECTOR p = XMLoadFloat3(&tempVertex.position);
+			XMStoreFloat3(&tempVertex.normal, XMVector3Normalize(p));
+
+			tempVertex.texCoords.x = theta / XM_2PI;
+			tempVertex.texCoords.y = phi / XM_PI;
+
+			meshData.mVertices.push_back(tempVertex);
+		}
+	}
+	meshData.mVertices.push_back(bottomVertex);
+
+	for (UINT i = 1; i <= 360; i++)
+	{
+		meshData.mIndices.push_back(0);
+		meshData.mIndices.push_back(i + 1);
+		meshData.mIndices.push_back(i);
+	}
+
+	UINT baseIndex = 1;
+	UINT ringFullVertexCount = 361;
+	for (UINT i = 0; i < 358; i++)
+	{
+		for (UINT j = 0; j < 360; ++j)
+		{
+			meshData.mIndices.push_back(baseIndex + i * ringFullVertexCount + j);
+			meshData.mIndices.push_back(baseIndex + i * ringFullVertexCount + j + 1);
+			meshData.mIndices.push_back(baseIndex + (i + 1) * ringFullVertexCount + j);
+
+			meshData.mIndices.push_back(baseIndex + (i + 1) *ringFullVertexCount + j);
+			meshData.mIndices.push_back(baseIndex + i * ringFullVertexCount + j + 1);
+			meshData.mIndices.push_back(baseIndex + (i + 1) * ringFullVertexCount + j + 1);
+		}
+	}
+
+	UINT southPoleIndex = (UINT)meshData.mVertices.size() - 1;
+	baseIndex = southPoleIndex - ringFullVertexCount;
+
+	for (UINT i = 0; i < 360; ++i)
+	{
+		meshData.mIndices.push_back(southPoleIndex);
+		meshData.mIndices.push_back(baseIndex + i);
+		meshData.mIndices.push_back(baseIndex + i + 1);
+	}
+}
+
 void GeometryFactory::GenerateSkyBox(PMeshData& meshData)
 {
 	meshData.Vertices.clear();
@@ -262,7 +338,7 @@ void GeometryFactory::GenerateStaticQuad(ID3D11Device* device, MeshData& meshDat
 
 void GeometryFactory::GenerateModel(FMeshData& meshData, string& fileName,
 	bool UVFlag, bool triangulateFlag, bool genNormalsFlag, bool sortByPrimitiveType,
-	bool removeDupVertFlag)
+	bool removeDupVertFlag, bool calcTangentFlag)//, bool defaultFlag)
 {
 	//Declare Importer
 	Assimp::Importer importer;
@@ -293,6 +369,12 @@ void GeometryFactory::GenerateModel(FMeshData& meshData, string& fileName,
 	{
 		flags |= aiProcess_FlipUVs;
 	}
+
+	if (calcTangentFlag)
+	{
+		flags |= aiProcess_CalcTangentSpace;
+	}
+
 
 	//Read In
 	const aiScene* scene = importer.ReadFile(fileName, flags);
@@ -439,8 +521,10 @@ void GeometryFactory::GenerateVertexAndIndexBuffersNon(ID3D11Device* device, Mes
 void GeometryFactory::GenerateBillBoards(ID3D11Device* device, ID3D11Buffer** vertexBuffer, UINT maxBillboards, float billboardSize, float xPosRange, float height, float zPosRange)
 {
 	default_random_engine randGen(mRandDevice());
-	uniform_real_distribution<float> PosXDistribution(-xPosRange, xPosRange);
-	uniform_real_distribution<float> PosZDistribution(-zPosRange, zPosRange);
+	//uniform_real_distribution<float> PosXDistribution(-xPosRange, xPosRange);
+	//uniform_real_distribution<float> PosZDistribution(-zPosRange, zPosRange);
+	uniform_real_distribution<float> PosXDistribution(22.5f, 55.0f);
+	uniform_real_distribution<float> PosZDistribution(20.0f, 55.0f);
 
 	vector<PointSprite> vertices;
 	vertices.reserve(maxBillboards);
@@ -471,10 +555,10 @@ void GeometryFactory::GenerateInstanceBuffer(ID3D11Device* device, ID3D11Buffer*
 {
 	default_random_engine randGen(mRandDevice());
 	//Instance Position
-	uniform_real_distribution<float> PosXDistribution(-52.0f, -50.0f);
-	uniform_real_distribution<float> PosZDistribution(-50.0f, 50.0f);
+	uniform_real_distribution<float> PosXDistribution(-55.0f, -22.5f);
+	uniform_real_distribution<float> PosZDistribution(20.0f, 55.0f);
 	//Instance Rotation
-	uniform_real_distribution<float> RotYDistribution(-0.0f, 360.0f);
+	uniform_real_distribution<float> RotYDistribution(0.0f, 360.0f);
 	//Instance Color
 	uniform_real_distribution<float> ColorXDistribution(0.0f, 1.0f);
 	uniform_real_distribution<float> ColorYDistribution(0.0f, 1.0f);
@@ -496,7 +580,7 @@ void GeometryFactory::GenerateInstanceBuffer(ID3D11Device* device, ID3D11Buffer*
 
 		//Rotation
 		float yRotAngle = RotYDistribution(randGen);
-		XMMATRIX instanceRotationMX = XMMatrixRotationY(XMConvertToRadians(yRotAngle));
+		XMMATRIX instanceRotationMX = XMMatrixRotationY(yRotAngle);
 
 		XMMATRIX instanceTransformationMX = XMMatrixMultiply(XMMatrixMultiply(instanceScalingMX, instanceRotationMX), instanceTranslationMX);
 		XMStoreFloat4x4(&instanceData[i].WorldMX, instanceTransformationMX);
