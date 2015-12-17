@@ -23,6 +23,6 @@ float4 main(PS_IN vertexIn) : SV_TARGET
 	float4 SkyBoxTexture1 = skyboxTextureCube.Sample(skyboxSSO, vertexIn.inPosL);
 	float4 SkyBoxTexture2 = skyboxTextureCube2.Sample(skyboxSSO, vertexIn.inPosL);
 
-	FinalColor = lerp(SkyBoxTexture1, SkyBoxTexture2, dataBlock1.w);
+	FinalColor = lerp(SkyBoxTexture1, SkyBoxTexture2, (sin(dataBlock1.w)  * 0.5 + 0.5));
 	return FinalColor;
 }
