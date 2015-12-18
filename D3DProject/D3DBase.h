@@ -42,6 +42,11 @@ class D3DBase
 
 	//Class Data Members
 	protected:
+		//MultiThreading
+		//const UINT numDeferredContexts = 2;
+		//ID3D11DeviceContext* mDeferredContexts[2] = { NULL };
+		//ID3D11CommandList* mCommandLists[2] = { NULL };
+
 		//Win32
 		HINSTANCE mAppInst;
 		HWND mMainWnd;

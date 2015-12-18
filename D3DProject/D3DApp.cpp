@@ -525,6 +525,9 @@ void D3DApp::Draw()
 	mD3DDeviceContext->PSSetShaderResources(0, 1, &mFullScreenQuadSRV);
 	mD3DDeviceContext->DrawIndexed(mFullScreenQuadInfo.Indices.size(), 0, 0);
 
+	//mD3DDeviceContext->ExecuteCommandList(mCommandLists[0], FALSE);
+
+
 	//Reset States & Present BackBuffer To The Screen
 	mSwapChain->Present(1, 0);
 }

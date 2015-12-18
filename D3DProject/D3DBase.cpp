@@ -357,6 +357,14 @@ bool D3DBase::Direct3DInit()
 
 	mD3DDevice->CheckMultisampleQualityLevels(DXGI_FORMAT_R8G8B8A8_UNORM, 4, &m4xMSAAQualityLevel);
 
+	//Creation of DeferredContexts
+	//for (UINT i = 0; i < numDeferredContexts; i++)
+	//{
+	//	mD3DDevice->CreateDeferredContext(0, &mDeferredContexts[i]);
+	//}
+
+
+
 	//Swapchain Desc
 	DXGI_SWAP_CHAIN_DESC swapChainDesc;
 	ZeroMemory(&swapChainDesc, sizeof(swapChainDesc));
